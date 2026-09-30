@@ -7,8 +7,7 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:7.4.2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20")
-        // Hatanın çözüldüğü satır: Doğru paket adı eklendi
-        classpath("com.github.recloudstream:gradle:master-SNAPSHOT")
+        classpath("com.github.recloudstream:gradle:-SNAPSHOT")
     }
 }
 
@@ -43,7 +42,6 @@ repositories {
 }
 
 dependencies {
-    // Çekirdek bağlantı ismi güncellendi
-    implementation("com.github.recloudstream:Cloudstream:master-SNAPSHOT")
+    implementation("com.github.recloudstream:Cloudstream:-SNAPSHOT")
     implementation("org.jsoup:jsoup:1.15.3")
 }
