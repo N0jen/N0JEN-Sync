@@ -21,13 +21,13 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Uygun Gradle Sürümünü Kur
+      - name: Gradle'ı Hazırla (Önbellek İptal)
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '7.6'
+          cache-disabled: true
 
       - name: Eklentiyi Derle (.cs3 ve manifest oluştur)
-        run: gradle make
+        run: gradle make --no-build-cache --refresh-dependencies
 
       - name: Builds Dalına Yükle
         uses: peaceiris/actions-gh-pages@v3
