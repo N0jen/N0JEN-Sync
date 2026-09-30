@@ -15,22 +15,19 @@ jobs:
       - name: Repoyu Klonla
         uses: actions/checkout@v3
 
-      - name: Java Kurulumu
+      - name: Java JDK 17 Kurulumu
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Gradle Altyapısını Havada Üret (Şablonsuz Çözüm)
-        run: |
-          gradle wrapper --gradle-version 8.0
-          echo 'rootProject.name = "N0JEN-Sync"' > settings.gradle.kts
-          chmod +x gradlew
+      - name: Gradle'ı Hazırla
+        uses: gradle/actions/setup-gradle@v3
 
-      - name: .cs3 ve Manifest Oluştur
-        run: ./gradlew make
+      - name: Eklentiyi Derle (.cs3 ve manifest oluştur)
+        run: gradle make
 
-      - name: Github'a Yükle (builds dalı)
+      - name: Builds Dalına Yükle
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
