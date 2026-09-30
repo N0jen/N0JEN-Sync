@@ -2,11 +2,15 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io")
+        maven("https://jitpack.io") {
+            metadataSources {
+                mavenPom()
+                artifact()
+            }
+        }
     }
     dependencies {
-        // Jitpack hatasını atlamak için doğrudan hatasız sürümün kodunu kullanıyoruz
-        classpath("com.github.recloudstream:gradle:32895aedb6")
+        classpath("com.github.recloudstream:gradle:master-SNAPSHOT")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22")
     }
 }
@@ -15,6 +19,11 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io")
+        maven("https://jitpack.io") {
+            metadataSources {
+                mavenPom()
+                artifact()
+            }
+        }
     }
 }
