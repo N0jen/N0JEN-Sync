@@ -1,8 +1,8 @@
-import com.lagradost.cloudstream3.plugins.CloudstreamPluginConfiguration
+plugins {
+    id("com.lagradost.cloudstream3.gradle")
+}
 
-apply(plugin = "com.lagradost.cloudstream3.plugins")
-
-configure<CloudstreamPluginConfiguration> {
+cloudstream {
     name = "AtomSporTV"
     description = "AtomSporTV Canlı Maç ve TV Kanalları"
     authors = listOf("N0jen")
