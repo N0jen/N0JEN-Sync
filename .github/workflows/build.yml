@@ -1,0 +1,36 @@
+name: Build Extensions
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repoyu Klonla
+        uses: actions/checkout@v3
+
+      - name: Java Kurulumu
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Derleme İzinleri
+        run: chmod +x gradlew
+
+      - name: .cs3 ve Manifest Oluştur
+        run: ./gradlew make
+
+      - name: Github'a Yükle (builds dalı)
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: builds
+          publish_dir: ./build
+          force_orphan: true
