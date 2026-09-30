@@ -7,7 +7,8 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:7.4.2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20")
-        classpath("com.github.recloudstream:gradle:-SNAPSHOT")
+        // HATA BURADAYDI: Sadece "-SNAPSHOT" yerine "master-SNAPSHOT" kullanılmalı
+        classpath("com.github.recloudstream:gradle:master-SNAPSHOT") 
     }
 }
 
@@ -42,6 +43,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.recloudstream:Cloudstream:-SNAPSHOT")
+    // HATA BURADAYDI: Sadece "-SNAPSHOT" yerine "master-SNAPSHOT" kullanılmalı
+    implementation("com.github.recloudstream:Cloudstream:master-SNAPSHOT")
     implementation("org.jsoup:jsoup:1.15.3")
 }
