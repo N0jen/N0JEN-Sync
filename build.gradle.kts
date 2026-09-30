@@ -5,7 +5,8 @@ buildscript {
         maven("https://jitpack.io")
     }
     dependencies {
-        classpath("com.github.recloudstream:gradle:master-SNAPSHOT")
+        // master-SNAPSHOT yerine sadece -SNAPSHOT kullanıyoruz
+        classpath("com.github.recloudstream:gradle:-SNAPSHOT")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22")
     }
 }
