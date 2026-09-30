@@ -3,7 +3,7 @@ plugins {
 }
 
 cloudstream {
-    name = "AtomSporTV"
+    // name = "AtomSporTV" satırını SİLDİK
     description = "AtomSporTV Canlı Maç ve TV Kanalları"
     authors = listOf("N0jen")
     version = 1
