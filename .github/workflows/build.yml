@@ -22,40 +22,38 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Resmi Cloudstream Şablonunu Entegre Et (Nihai Çözüm)
+      - name: Resmi Şablonu Klonla (Git Clone Çözümü)
         run: |
-          # 1. Cloudstream geliştiricilerinin resmi şablonunu indir
-          curl -L https://github.com/recloudstream/cloudstream-extensions-template/archive/refs/heads/master.zip -o template.zip
-          unzip -q template.zip
+          # 1. Bozuk inen ZIP yöntemi yerine doğrudan Git ile klonluyoruz
+          git clone https://github.com/recloudstream/cloudstream-extensions-template.git temp_template
           
-          # 2. Hatasız derleme sağlayan orijinal dosyaları projene kopyala
-          cp cloudstream-extensions-template-master/build.gradle.kts .
-          cp cloudstream-extensions-template-master/settings.gradle.kts .
-          cp -r cloudstream-extensions-template-master/gradle .
-          cp cloudstream-extensions-template-master/gradlew .
-          cp cloudstream-extensions-template-master/gradlew.bat .
+          # 2. Çalışan orijinal şablon dosyalarını kopyala
+          cp temp_template/build.gradle.kts .
+          cp temp_template/settings.gradle.kts .
+          cp -r temp_template/gradle .
+          cp temp_template/gradlew .
+          cp temp_template/gradlew.bat .
           
-          # 3. AtomSpor modülünün ayar dosyasını orijinal şablondan al
+          # 3. Modül ayar dosyasını orijinal şablondan al
           mkdir -p AtomSpor
-          cp cloudstream-extensions-template-master/ExampleProvider/build.gradle.kts AtomSpor/
+          cp temp_template/ExampleProvider/build.gradle.kts AtomSpor/
           
-          # 4. Ayarları AtomSpor'a göre otomatik değiştir
+          # 4. Ayarları senin eklentine göre otomatik değiştir
           sed -i 's/ExampleProvider/AtomSpor/g' settings.gradle.kts
           sed -i 's/name = "ExampleProvider"/name = "AtomSporTV"/' AtomSpor/build.gradle.kts
           sed -i 's/description = "Test"/description = "AtomSporTV Canlı Maç ve TV Kanalları"/' AtomSpor/build.gradle.kts
           sed -i 's/authors = listOf("LagradOst")/authors = listOf("N0jen")/' AtomSpor/build.gradle.kts
           sed -i 's/tvTypes = listOf("Others")/tvTypes = listOf("Live")/' AtomSpor/build.gradle.kts
           
-          # 5. Senin yazdığın kodlar yanlışlıkla dışarıdaysa içeri taşı
+          # 5. Senin kodlarını (.kt dosyaları) dışarıdaysa doğru yere taşı
           if [ -d "src" ]; then
-            mv src AtomSpor/
+            mv src AtomSpor/ || true
           fi
           
-          # 6. Eski, hatalı dosyaları temizle
-          rm -f build.gradle settings.gradle AtomSpor/build.gradle
-          rm -rf cloudstream-extensions-template-master template.zip
+          # 6. Geçici klon dosyasını sil
+          rm -rf temp_template
           
-          # 7. Sisteme çalışma izni ver
+          # 7. Çalıştırma izni ver
           chmod +x gradlew
 
       - name: Eklentiyi Derle (.cs3)
