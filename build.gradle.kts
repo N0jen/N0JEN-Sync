@@ -7,8 +7,8 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:7.4.2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20")
-        // HATA BURADAYDI: Sadece "-SNAPSHOT" yerine "master-SNAPSHOT" kullanılmalı
-        classpath("com.github.recloudstream:gradle:master-SNAPSHOT") 
+        // DÜZELTME: JitPack'in metadata hatasını aşmak için master-master-SNAPSHOT kullanıyoruz
+        classpath("com.github.recloudstream:gradle:master-master-SNAPSHOT")
     }
 }
 
@@ -43,7 +43,7 @@ repositories {
 }
 
 dependencies {
-    // HATA BURADAYDI: Sadece "-SNAPSHOT" yerine "master-SNAPSHOT" kullanılmalı
-    implementation("com.github.recloudstream:Cloudstream:master-SNAPSHOT")
+    // DÜZELTME: Aynı sorunu burada da yaşamamak için burayı da güncelledik
+    implementation("com.github.recloudstream:Cloudstream:master-master-SNAPSHOT")
     implementation("org.jsoup:jsoup:1.15.3")
 }
