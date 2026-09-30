@@ -20,7 +20,7 @@ apply(plugin = "com.lagradost.cloudstream3.gradle")
 
 cloudstream {
     pluginName = "N0JEN Sync"
-    pluginAuthor = "Ahmet21ahmet"
+    pluginAuthor = "N0jen"
     pluginDescription = "AtomSpor canlı maç ve TV yayınları"
     pluginVersion = 1
     pluginTypes = listOf("tv")
