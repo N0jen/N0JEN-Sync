@@ -7,7 +7,9 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:7.4.2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20")
-        classpath("com.github.recloudstream:gradle:master-SNAPSHOT")
+        
+        // DÜZELTME 1: Sonuna @jar ekleyerek JitPack'in hatalı metadata dosyasını (%100) es geçiyoruz.
+        classpath("com.github.recloudstream:gradle:master-SNAPSHOT@jar")
     }
 }
 
@@ -42,6 +44,12 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.recloudstream:Cloudstream:master-SNAPSHOT")
+    // DÜZELTME 2: Sonuna @aar ekleyerek Cloudstream ana kütüphanesini doğrudan çekiyoruz.
+    implementation("com.github.recloudstream:Cloudstream:master-SNAPSHOT@aar")
     implementation("org.jsoup:jsoup:1.15.3")
+    
+    // NOT: Metadata (POM) dosyasını atladığımız için, Cloudstream'in ihtiyaç duyduğu
+    // temel Kotlin kütüphanelerini eklentinin çökmemesi için manuel olarak ekliyoruz.
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
 }
