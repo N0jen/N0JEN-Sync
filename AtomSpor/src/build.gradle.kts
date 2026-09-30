@@ -1,4 +1,4 @@
-import com.lagradost.cloudstream3.plugins.CloudstreamPluginConfiguration
+apply(plugin = "com.lagradost.cloudstream3.plugins")
 
 cloudstream {
     name = "AtomSporTV"
