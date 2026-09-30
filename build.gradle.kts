@@ -3,9 +3,8 @@ buildscript {
         google()
         mavenCentral()
         maven("https://jitpack.io") {
-            // KESİN ÇÖZÜM 1: Gradle'ın JitPack üzerindeki bozuk POM'u okumasını tamamen yasaklıyoruz.
             metadataSources {
-                artifact() 
+                artifact()
             }
         }
     }
@@ -16,9 +15,13 @@ buildscript {
     }
 }
 
-apply(plugin = "com.android.library")
-apply(plugin = "kotlin-android")
-apply(plugin = "com.lagradost.cloudstream3.gradle")
+// DÜZELTME BURADA: apply(plugin = ...) yerine modern plugins {} bloğunu kullanıyoruz.
+// Bu sayede Kotlin; android, cloudstream ve implementation kelimelerini tanıyacak.
+plugins {
+    id("com.android.library")
+    kotlin("android")
+    id("com.lagradost.cloudstream3.gradle")
+}
 
 cloudstream {
     pluginName = "N0JEN Sync"
@@ -44,7 +47,6 @@ repositories {
     google()
     mavenCentral()
     maven("https://jitpack.io") {
-        // KESİN ÇÖZÜM 2: Aynı yasağı Cloudstream ana kütüphanesi için de uyguluyoruz.
         metadataSources {
             artifact()
         }
@@ -55,8 +57,6 @@ dependencies {
     implementation("com.github.recloudstream:Cloudstream:master-SNAPSHOT")
     implementation("org.jsoup:jsoup:1.15.3")
     
-    // POM dosyasını yok saydığımız için arka planda Cloudstream'in ihtiyaç duyacağı 
-    // kritik Kotlin kütüphanelerini eklentinin çökmemesi için manuel olarak ekliyoruz.
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
 }
