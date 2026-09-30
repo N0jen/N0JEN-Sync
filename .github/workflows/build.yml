@@ -13,45 +13,35 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Depoyu Çek (Checkout)
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Java (JDK 17) Kur
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Gradle Wrapper Oluştur (Sabit Sürüm)
-        run: gradle wrapper --gradle-version 8.4
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
-      - name: Gradlew Yetkilendirmesi
-        run: chmod +x ./gradlew
-
-      - name: Eklentiyi Derle (.cs3)
+      - name: Build Extension
         run: ./gradlew make --no-daemon
 
-      - name: Master JSON Oluştur
+      - name: Generate JSON
         run: ./gradlew makePluginsJson --no-daemon
 
-      - name: Dosyaları Dağıtıma Hazırla
+      - name: Deploy
         run: |
           mkdir -p _deploy
           find . -type f -name "*.cs3" -exec cp {} _deploy/ \;
+          cp build/plugins.json _deploy/repo.json
+          cp build/plugins.json _deploy/plugins.json
           
-          if [ -f "build/plugins.json" ]; then
-            cp build/plugins.json _deploy/repo.json
-            cp build/plugins.json _deploy/plugins.json
-          else
-            echo "HATA: build/plugins.json bulunamadı!"
-            exit 1
-          fi
-
-      - name: Builds Dalına Yükle (Deploy)
+      - name: Upload to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./_deploy
           publish_branch: builds
           force_orphan: true
-          commit_message: "Otomatik Derleme: Eklenti ve JSON Güncellendi"
