@@ -22,6 +22,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Gradle Wrapper Oluştur
+        run: gradle wrapper
+
       - name: Gradlew Yetkilendirmesi
         run: chmod +x ./gradlew
 
@@ -34,11 +37,16 @@ jobs:
       - name: Dosyaları Dağıtıma Hazırla
         run: |
           mkdir -p _deploy
-          # Tüm .cs3 dosyalarını bul ve kopyala
           find . -type f -name "*.cs3" -exec cp {} _deploy/ \;
-          # Cloudstream'in okuması için JSON dosyasını oluştur
-          cp build/plugins.json _deploy/repo.json
-          cp build/plugins.json _deploy/plugins.json
+          
+          # JSON dosyalarının oluştuğundan emin olup kopyalıyoruz
+          if [ -f "build/plugins.json" ]; then
+            cp build/plugins.json _deploy/repo.json
+            cp build/plugins.json _deploy/plugins.json
+          else
+            echo "HATA: build/plugins.json bulunamadı!"
+            exit 1
+          fi
 
       - name: Builds Dalına Yükle (Deploy)
         uses: peaceiris/actions-gh-pages@v3
