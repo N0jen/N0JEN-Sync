@@ -1,7 +1,22 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        maven("https://jitpack.io")
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:7.4.2")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20")
+        classpath("com.github.recloudstream:cloudstream-gradle-plugin:master-SNAPSHOT")
+    }
+}
+
 plugins {
     id("com.android.library")
     kotlin("android")
 }
+
+apply(plugin = "com.lagradost.cloudstream3.gradle")
 
 cloudstream {
     pluginName = "N0JEN Sync"
@@ -21,4 +36,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+}
+
+repositories {
+    google()
+    mavenCentral()
+    maven("https://jitpack.io")
+}
+
+dependencies {
+    implementation("com.github.recloudstream:cloudstream:master-SNAPSHOT")
+    implementation("org.jsoup:jsoup:1.15.3")
 }
