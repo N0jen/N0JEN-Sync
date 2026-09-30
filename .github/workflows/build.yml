@@ -22,38 +22,59 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Resmi Şablonu Klonla (Git Clone Çözümü)
+      - name: Proje Dosyalarını Bağımsız Oluştur
         run: |
-          # 1. Bozuk inen ZIP yöntemi yerine doğrudan Git ile klonluyoruz
-          git clone https://github.com/recloudstream/cloudstream-extensions-template.git temp_template
-          
-          # 2. Çalışan orijinal şablon dosyalarını kopyala
-          cp temp_template/build.gradle.kts .
-          cp temp_template/settings.gradle.kts .
-          cp -r temp_template/gradle .
-          cp temp_template/gradlew .
-          cp temp_template/gradlew.bat .
-          
-          # 3. Modül ayar dosyasını orijinal şablondan al
-          mkdir -p AtomSpor
-          cp temp_template/ExampleProvider/build.gradle.kts AtomSpor/
-          
-          # 4. Ayarları senin eklentine göre otomatik değiştir
-          sed -i 's/ExampleProvider/AtomSpor/g' settings.gradle.kts
-          sed -i 's/name = "ExampleProvider"/name = "AtomSporTV"/' AtomSpor/build.gradle.kts
-          sed -i 's/description = "Test"/description = "AtomSporTV Canlı Maç ve TV Kanalları"/' AtomSpor/build.gradle.kts
-          sed -i 's/authors = listOf("LagradOst")/authors = listOf("N0jen")/' AtomSpor/build.gradle.kts
-          sed -i 's/tvTypes = listOf("Others")/tvTypes = listOf("Live")/' AtomSpor/build.gradle.kts
-          
-          # 5. Senin kodlarını (.kt dosyaları) dışarıdaysa doğru yere taşı
+          # 1. Kodların dışarıdaysa otomatik içeri al
           if [ -d "src" ]; then
-            mv src AtomSpor/ || true
+            mkdir -p AtomSpor
+            mv src AtomSpor/
           fi
           
-          # 6. Geçici klon dosyasını sil
-          rm -rf temp_template
+          # 2. Ana Ayar Dosyası (Dışarıdan indirmeden kendimiz yazıyoruz)
+          cat << 'EOF' > build.gradle.kts
+          buildscript {
+              repositories {
+                  google()
+                  mavenCentral()
+                  maven("https://jitpack.io")
+              }
+              dependencies {
+                  classpath("com.github.recloudstream:gradle:-SNAPSHOT")
+                  classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24")
+              }
+          }
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+                  maven("https://jitpack.io")
+              }
+          }
+          EOF
           
-          # 7. Çalıştırma izni ver
+          # 3. Settings Dosyası
+          cat << 'EOF' > settings.gradle.kts
+          rootProject.name = "N0JEN-Sync"
+          include(":AtomSpor")
+          EOF
+          
+          # 4. Modül Ayar Dosyası
+          mkdir -p AtomSpor
+          cat << 'EOF' > AtomSpor/build.gradle.kts
+          apply(plugin = "com.lagradost.cloudstream3.plugins")
+          
+          cloudstream {
+              name = "AtomSporTV"
+              description = "AtomSporTV Canlı Maç ve TV Kanalları"
+              authors = listOf("N0jen")
+              version = 1
+              tvTypes = listOf("Live")
+          }
+          EOF
+
+      - name: Gradle 7.6.3 Kurulumu (Cloudstream Referans Hatası Çözümü)
+        run: |
+          gradle wrapper --gradle-version 7.6.3
           chmod +x gradlew
 
       - name: Eklentiyi Derle (.cs3)
