@@ -2,14 +2,17 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io")
+        maven("https://jitpack.io") {
+            // KESİN ÇÖZÜM 1: Gradle'ın JitPack üzerindeki bozuk POM'u okumasını tamamen yasaklıyoruz.
+            metadataSources {
+                artifact() 
+            }
+        }
     }
     dependencies {
         classpath("com.android.tools.build:gradle:7.4.2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20")
-        
-        // DÜZELTME 1: Sonuna @jar ekleyerek JitPack'in hatalı metadata dosyasını (%100) es geçiyoruz.
-        classpath("com.github.recloudstream:gradle:master-SNAPSHOT@jar")
+        classpath("com.github.recloudstream:gradle:master-SNAPSHOT")
     }
 }
 
@@ -40,16 +43,20 @@ android {
 repositories {
     google()
     mavenCentral()
-    maven("https://jitpack.io")
+    maven("https://jitpack.io") {
+        // KESİN ÇÖZÜM 2: Aynı yasağı Cloudstream ana kütüphanesi için de uyguluyoruz.
+        metadataSources {
+            artifact()
+        }
+    }
 }
 
 dependencies {
-    // DÜZELTME 2: Sonuna @aar ekleyerek Cloudstream ana kütüphanesini doğrudan çekiyoruz.
-    implementation("com.github.recloudstream:Cloudstream:master-SNAPSHOT@aar")
+    implementation("com.github.recloudstream:Cloudstream:master-SNAPSHOT")
     implementation("org.jsoup:jsoup:1.15.3")
     
-    // NOT: Metadata (POM) dosyasını atladığımız için, Cloudstream'in ihtiyaç duyduğu
-    // temel Kotlin kütüphanelerini eklentinin çökmemesi için manuel olarak ekliyoruz.
+    // POM dosyasını yok saydığımız için arka planda Cloudstream'in ihtiyaç duyacağı 
+    // kritik Kotlin kütüphanelerini eklentinin çökmemesi için manuel olarak ekliyoruz.
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
 }
