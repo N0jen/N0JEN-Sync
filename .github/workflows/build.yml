@@ -13,75 +13,86 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout
+      - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Java (JDK 17) Kurulumu
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Klasörleri ve Dosyaları Otomatik Onar
+      - name: Gradle 8.4 Entegrasyonu (Gömülü Çözüm)
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
+
+      - name: Sistemi Temizle ve Groovy Formatına Çevir
         run: |
-          # Yanlış yerdeki src klasörünü olması gereken yere taşı
+          # 1. Yanlış yerdeki src klasörü varsa güvenle taşı
           if [ -d "src" ]; then
             mkdir -p AtomSpor
             mv src AtomSpor/
           fi
           
-          # Ana ayar dosyası (Jitpack indirme sorunu çözülmüş hali)
-          cat << 'EOF' > build.gradle.kts
+          # 2. Hataya sebep olan katı Kotlin (.kts) dosyalarını sil
+          rm -f build.gradle.kts settings.gradle.kts AtomSpor/build.gradle.kts gradlew gradlew.bat
+          
+          # 3. Ana Ayar Dosyası (Esnek Groovy Formatı)
+          cat << 'EOF' > build.gradle
           buildscript {
               repositories {
                   google()
                   mavenCentral()
-                  maven("https://jitpack.io") { metadataSources { mavenPom(); artifact() } }
+                  maven { 
+                      url 'https://jitpack.io' 
+                      metadataSources { mavenPom(); artifact() }
+                  }
               }
               dependencies {
-                  classpath("com.github.recloudstream:gradle:master-SNAPSHOT")
-                  classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22")
+                  classpath 'com.github.recloudstream:gradle:master-SNAPSHOT'
+                  classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22'
               }
           }
           allprojects {
               repositories {
                   google()
                   mavenCentral()
-                  maven("https://jitpack.io") { metadataSources { mavenPom(); artifact() } }
+                  maven { 
+                      url 'https://jitpack.io' 
+                      metadataSources { mavenPom(); artifact() }
+                  }
               }
           }
           EOF
           
-          # Sistemi birbirine bağlayan dosya
-          echo 'rootProject.name = "N0JEN-Sync"' > settings.gradle.kts
-          echo 'include(":AtomSpor")' >> settings.gradle.kts
+          # 4. Settings Dosyası
+          cat << 'EOF' > settings.gradle
+          rootProject.name = 'N0JEN-Sync'
+          include ':AtomSpor'
+          EOF
           
-          # Eklentinin tertemiz orijinal ayar kodu
+          # 5. Eklenti Ayar Dosyası (Esnek Groovy Formatı)
           mkdir -p AtomSpor
-          cat << 'EOF' > AtomSpor/build.gradle.kts
-          apply(plugin = "com.lagradost.cloudstream3.plugins")
+          cat << 'EOF' > AtomSpor/build.gradle
+          apply plugin: 'com.lagradost.cloudstream3.plugins'
           
           cloudstream {
               name = "AtomSporTV"
               description = "AtomSporTV Canlı Maç ve TV Kanalları"
-              authors = listOf("N0jen")
+              authors = ["N0jen"]
               version = 1
-              tvTypes = listOf("Live")
+              tvTypes = ["Live"]
           }
           EOF
 
-      - name: Sabit Sürüm Gradlew Oluştur
-        run: |
-          gradle wrapper --gradle-version 8.4
-          chmod +x gradlew
+      - name: Eklentiyi Derle (.cs3)
+        run: gradle make --no-daemon
 
-      - name: Build Extension
-        run: ./gradlew make --no-daemon
+      - name: Master JSON Oluştur
+        run: gradle makePluginsJson --no-daemon
 
-      - name: Generate JSON
-        run: ./gradlew makePluginsJson --no-daemon
-
-      - name: Deploy
+      - name: Dağıtıma Hazırla
         run: |
           mkdir -p _deploy
           find . -type f -name "*.cs3" -exec cp {} _deploy/ \;
@@ -90,7 +101,7 @@ jobs:
             cp build/plugins.json _deploy/plugins.json
           fi
           
-      - name: Upload to GitHub Pages
+      - name: Yayına Al (Deploy)
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
