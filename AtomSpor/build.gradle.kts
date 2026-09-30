@@ -1,10 +1,8 @@
-import com.lagradost.cloudstream3.gradle.CloudstreamExtension
+import com.lagradost.cloudstream3.plugins.CloudstreamPluginConfiguration
 
-// Güncel Cloudstream kütüphane kimliği
-apply(plugin = "com.lagradost.cloudstream3.gradle")
+apply(plugin = "com.lagradost.cloudstream3.plugins")
 
-// Sistemin cloudstream ayarlarını hatasız tanıması için zorunlu yapılandırma
-configure<CloudstreamExtension> {
+configure<CloudstreamPluginConfiguration> {
     name = "AtomSporTV"
     description = "AtomSporTV Canlı Maç ve TV Kanalları"
     authors = listOf("N0jen")
