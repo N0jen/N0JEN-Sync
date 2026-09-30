@@ -1,0 +1,13 @@
+package com.n0jen.atomspor
+
+import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
+import com.lagradost.cloudstream3.plugins.Plugin
+import android.content.Context
+
+@CloudstreamPlugin
+class AtomSporTvPlugin: Plugin() {
+    override fun load(context: Context) {
+        // Provider dosyanı burada Cloudstream'e kaydediyoruz
+        registerMainAPI(AtomSporTvProvider())
+    }
+}
