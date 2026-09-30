@@ -2,13 +2,19 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io")
+        maven("https://jitpack.io") {
+            // DÜZELTME: JitPack'in bozuk versiyon kontrolünü atlamak için
+            metadataSources {
+                mavenPom()
+                artifact()
+            }
+        }
     }
     dependencies {
         classpath("com.android.tools.build:gradle:7.4.2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20")
-        // DÜZELTME: JitPack'in metadata hatasını aşmak için master-master-SNAPSHOT kullanıyoruz
-        classpath("com.github.recloudstream:gradle:master-master-SNAPSHOT")
+        // Yeniden doğru dosya yoluna aldık
+        classpath("com.github.recloudstream:gradle:master-SNAPSHOT")
     }
 }
 
@@ -39,11 +45,17 @@ android {
 repositories {
     google()
     mavenCentral()
-    maven("https://jitpack.io")
+    maven("https://jitpack.io") {
+        // DÜZELTME: JitPack'in bozuk versiyon kontrolünü atlamak için
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+    }
 }
 
 dependencies {
-    // DÜZELTME: Aynı sorunu burada da yaşamamak için burayı da güncelledik
-    implementation("com.github.recloudstream:Cloudstream:master-master-SNAPSHOT")
+    // Yeniden doğru dosya yoluna aldık
+    implementation("com.github.recloudstream:Cloudstream:master-SNAPSHOT")
     implementation("org.jsoup:jsoup:1.15.3")
 }
