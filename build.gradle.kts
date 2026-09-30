@@ -7,11 +7,11 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:7.4.2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20")
-        classpath("com.github.recloudstream:cloudstream-gradle-plugin:master-SNAPSHOT")
+        // Hatanın çözüldüğü satır: Doğru paket adı eklendi
+        classpath("com.github.recloudstream:gradle:master-SNAPSHOT")
     }
 }
 
-// Gradle 9 hatalarını önlemek için plugins bloğu yerine apply metodu kullanıldı
 apply(plugin = "com.android.library")
 apply(plugin = "kotlin-android")
 apply(plugin = "com.lagradost.cloudstream3.gradle")
@@ -43,6 +43,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.recloudstream:cloudstream:master-SNAPSHOT")
+    // Çekirdek bağlantı ismi güncellendi
+    implementation("com.github.recloudstream:Cloudstream:master-SNAPSHOT")
     implementation("org.jsoup:jsoup:1.15.3")
 }
