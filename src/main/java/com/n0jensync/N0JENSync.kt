@@ -15,8 +15,8 @@ class N0JENSyncPlugin : Plugin() {
 
 class AtomSporProvider : MainAPI() {
     override var mainUrl = "https://atomsportv492.top"
-    override var name = "N0JEN Sync (AtomSpor)"
-    override val hasMainPage = true // Ana sayfa aktif
+    override var name = "N0JEN Sync"
+    override val hasMainPage = true
     override var lang = "tr"
     override val supportedTypes = setOf(TvType.Live)
 
@@ -39,7 +39,6 @@ class AtomSporProvider : MainAPI() {
         }
     }
 
-    // CLOUDSTREAM ANA SAYFASINI (MAIN PAGE) OLUŞTURAN BÖLÜM
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val items = mutableListOf<HomePageList>()
         val matchItems = mutableListOf<SearchResponse>()
@@ -66,7 +65,7 @@ class AtomSporProvider : MainAPI() {
                 matchItems.add(
                     LiveSearchResponse(
                         name = title,
-                        url = matchId, // ID'yi saklıyoruz
+                        url = matchId,
                         apiName = this.name,
                         type = TvType.Live,
                         posterUrl = displayLogo
@@ -77,7 +76,6 @@ class AtomSporProvider : MainAPI() {
             e.printStackTrace()
         }
 
-        // 1. Yatay Liste: Canlı Maçlar
         if (matchItems.isNotEmpty()) {
             items.add(HomePageList("🔥 Canlı Maçlar", matchItems))
         }
@@ -85,7 +83,6 @@ class AtomSporProvider : MainAPI() {
         val tvChannels = listOf(
             Triple("bein-sports-1", "BEIN SPORTS 1", "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/BeIN_Sports_1_HD.svg/200px-BeIN_Sports_1_HD.svg.png"),
             Triple("bein-sports-2", "BEIN SPORTS 2", "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/BeIN_Sports_2_HD.svg/200px-BeIN_Sports_2_HD.svg.png"),
-            Triple("bein-sports-3", "BEIN SPORTS 3", "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/BeIN_Sports_3_HD.svg/200px-BeIN_Sports_3_HD.svg.png"),
             Triple("s-sport", "S SPORT", "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/S_Sport_logo.svg/200px-S_Sport_logo.svg.png"),
             Triple("trt-spor", "TRT SPOR", "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/TRT_Spor_logo.svg/200px-TRT_Spor_logo.svg.png")
         )
@@ -100,9 +97,7 @@ class AtomSporProvider : MainAPI() {
             )
         }
         
-        // 2. Yatay Liste: TV Kanalları
         items.add(HomePageList("📺 TV Kanalları", channelItems))
-
         return HomePageResponse(items)
     }
 
