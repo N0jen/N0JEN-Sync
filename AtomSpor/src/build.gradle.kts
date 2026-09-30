@@ -1,4 +1,6 @@
-apply(plugin = "com.lagradost.cloudstream3.plugins")
+plugins {
+    id("com.lagradost.cloudstream3.gradle")
+}
 
 cloudstream {
     name = "AtomSporTV"
