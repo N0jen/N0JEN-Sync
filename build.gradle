@@ -8,9 +8,9 @@ buildscript {
         classpath 'com.android.tools.build:gradle:7.4.2'
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
         
-        // ÇÖZÜM 1: "-SNAPSHOT" hatasından kaçınmak için direkt "master" dalını hedefliyoruz.
-        // Böylece Gradle, POM dosyasını sorunsuz indirip eklentiyi tanıyacak.
-        classpath 'com.github.recloudstream:gradle:master'
+        // ÇÖZÜM 1: Jitpack hatalarını aşmak için değişken etiketler yerine 
+        // doğrudan son çalışan "32895aedb6" commit hash'ini kullanıyoruz.
+        classpath 'com.github.recloudstream:gradle:32895aedb6'
     }
 }
 
@@ -27,7 +27,6 @@ cloudstream {
 }
 
 android {
-    // ÇÖZÜM 2: Groovy sözdiziminde eşittir (=) işareti kullanılmaz.
     namespace 'com.n0jensync'
     compileSdk 33
     
@@ -47,11 +46,8 @@ repositories {
 }
 
 dependencies {
-    // ÇÖZÜM 3: Cloudstream kütüphanesi için de aynı şekilde "master" kullanıyoruz.
-    implementation 'com.github.recloudstream:Cloudstream:master'
+    // ÇÖZÜM 2: Cloudstream ana yapısı için de Eylül 2026'daki en güncel 
+    // sorunsuz derleme olan "d77c856" commit hash'ini sabitliyoruz.
+    implementation 'com.github.recloudstream:Cloudstream:d77c856'
     implementation 'org.jsoup:jsoup:1.15.3'
-    
-    // Güvenlik amaçlı Kotlin temel kütüphaneleri
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
-    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1'
 }
