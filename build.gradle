@@ -2,17 +2,15 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        maven { 
-            url 'https://jitpack.io' 
-            metadataSources {
-                artifact()
-            }
-        }
+        maven { url 'https://jitpack.io' }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:7.4.2'
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
-        classpath 'com.github.recloudstream:gradle:master-SNAPSHOT'
+        
+        // ÇÖZÜM 1: "-SNAPSHOT" hatasından kaçınmak için direkt "master" dalını hedefliyoruz.
+        // Böylece Gradle, POM dosyasını sorunsuz indirip eklentiyi tanıyacak.
+        classpath 'com.github.recloudstream:gradle:master'
     }
 }
 
@@ -29,33 +27,31 @@ cloudstream {
 }
 
 android {
-    namespace = "com.n0jensync"
-    compileSdk = 33
+    // ÇÖZÜM 2: Groovy sözdiziminde eşittir (=) işareti kullanılmaz.
+    namespace 'com.n0jensync'
+    compileSdk 33
+    
     defaultConfig {
-        minSdk = 21
+        minSdk 21
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
 repositories {
     google()
     mavenCentral()
-    maven { 
-        url 'https://jitpack.io' 
-        metadataSources {
-            artifact()
-        }
-    }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    implementation 'com.github.recloudstream:Cloudstream:master-SNAPSHOT'
+    // ÇÖZÜM 3: Cloudstream kütüphanesi için de aynı şekilde "master" kullanıyoruz.
+    implementation 'com.github.recloudstream:Cloudstream:master'
     implementation 'org.jsoup:jsoup:1.15.3'
     
-    // POM bypass edildiği için Cloudstream'in arayabileceği temel kütüphaneler:
+    // Güvenlik amaçlı Kotlin temel kütüphaneleri
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1'
 }
