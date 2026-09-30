@@ -7,7 +7,6 @@ import android.content.Context
 @CloudstreamPlugin
 class AtomSporTvPlugin: Plugin() {
     override fun load(context: Context) {
-        // Provider dosyanı burada Cloudstream'e kaydediyoruz
         registerMainAPI(AtomSporTvProvider())
     }
 }
