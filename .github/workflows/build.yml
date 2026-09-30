@@ -24,11 +24,13 @@ jobs:
 
       - name: Klasörleri ve Dosyaları Otomatik Onar
         run: |
+          # Yanlış yerdeki src klasörünü olması gereken yere taşı
           if [ -d "src" ]; then
             mkdir -p AtomSpor
             mv src AtomSpor/
           fi
           
+          # Ana ayar dosyası (Jitpack indirme sorunu çözülmüş hali)
           cat << 'EOF' > build.gradle.kts
           buildscript {
               repositories {
@@ -50,16 +52,16 @@ jobs:
           }
           EOF
           
+          # Sistemi birbirine bağlayan dosya
           echo 'rootProject.name = "N0JEN-Sync"' > settings.gradle.kts
           echo 'include(":AtomSpor")' >> settings.gradle.kts
           
+          # Eklentinin tertemiz orijinal ayar kodu
           mkdir -p AtomSpor
           cat << 'EOF' > AtomSpor/build.gradle.kts
-          import com.lagradost.cloudstream3.plugins.CloudstreamPluginConfiguration
-          
           apply(plugin = "com.lagradost.cloudstream3.plugins")
           
-          configure<CloudstreamPluginConfiguration> {
+          cloudstream {
               name = "AtomSporTV"
               description = "AtomSporTV Canlı Maç ve TV Kanalları"
               authors = listOf("N0jen")
