@@ -21,8 +21,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Derleme İzinleri
-        run: chmod +x gradlew
+      - name: Gradle Altyapısını Havada Üret (Şablonsuz Çözüm)
+        run: |
+          gradle wrapper --gradle-version 8.0
+          echo 'rootProject.name = "N0JEN-Sync"' > settings.gradle.kts
+          chmod +x gradlew
 
       - name: .cs3 ve Manifest Oluştur
         run: ./gradlew make
