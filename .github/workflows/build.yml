@@ -22,7 +22,54 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Sabit Sürüm Gradlew Oluştur (ÇÖZÜM)
+      - name: Klasörleri ve Dosyaları Otomatik Onar
+        run: |
+          # 1. Kodlar dışarıda unutulduysa otomatik içeri taşı
+          if [ -d "src" ]; then
+            mkdir -p AtomSpor
+            mv src AtomSpor/
+          fi
+          
+          # 2. Ana dizin ayar dosyasını zorla ve hatasız oluştur
+          cat << 'EOF' > build.gradle.kts
+          buildscript {
+              repositories {
+                  google()
+                  mavenCentral()
+                  maven("https://jitpack.io") { metadataSources { mavenPom(); artifact() } }
+              }
+              dependencies {
+                  classpath("com.github.recloudstream:gradle:master-SNAPSHOT")
+                  classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22")
+              }
+          }
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+                  maven("https://jitpack.io") { metadataSources { mavenPom(); artifact() } }
+              }
+          }
+          EOF
+          
+          # 3. Settings dosyasını zorla oluştur
+          echo 'rootProject.name = "N0JEN-Sync"' > settings.gradle.kts
+          echo 'include(":AtomSpor")' >> settings.gradle.kts
+          
+          # 4. Eklenti ayar dosyasını zorla oluştur
+          mkdir -p AtomSpor
+          cat << 'EOF' > AtomSpor/build.gradle.kts
+          apply(plugin = "com.lagradost.cloudstream3.plugins")
+          cloudstream {
+              name = "AtomSporTV"
+              description = "AtomSporTV Canlı Maç ve TV Kanalları"
+              authors = listOf("N0jen")
+              version = 1
+              tvTypes = listOf("Live")
+          }
+          EOF
+
+      - name: Sabit Sürüm Gradlew Oluştur
         run: |
           gradle wrapper --gradle-version 8.4
           chmod +x gradlew
