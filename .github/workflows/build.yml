@@ -1,4 +1,4 @@
-name: Build and Deploy Extension
+name: Build and Deploy
 
 on:
   push:
@@ -16,72 +16,23 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Java (JDK 17) Kurulumu
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Proje Dosyalarını Bağımsız Oluştur
-        run: |
-          # 1. Kodların dışarıdaysa otomatik içeri al
-          if [ -d "src" ]; then
-            mkdir -p AtomSpor
-            mv src AtomSpor/
-          fi
-          
-          # 2. Ana Ayar Dosyası (Dışarıdan indirmeden kendimiz yazıyoruz)
-          cat << 'EOF' > build.gradle.kts
-          buildscript {
-              repositories {
-                  google()
-                  mavenCentral()
-                  maven("https://jitpack.io")
-              }
-              dependencies {
-                  classpath("com.github.recloudstream:gradle:-SNAPSHOT")
-                  classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24")
-              }
-          }
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-                  maven("https://jitpack.io")
-              }
-          }
-          EOF
-          
-          # 3. Settings Dosyası
-          cat << 'EOF' > settings.gradle.kts
-          rootProject.name = "N0JEN-Sync"
-          include(":AtomSpor")
-          EOF
-          
-          # 4. Modül Ayar Dosyası
-          mkdir -p AtomSpor
-          cat << 'EOF' > AtomSpor/build.gradle.kts
-          apply(plugin = "com.lagradost.cloudstream3.plugins")
-          
-          cloudstream {
-              name = "AtomSporTV"
-              description = "AtomSporTV Canlı Maç ve TV Kanalları"
-              authors = listOf("N0jen")
-              version = 1
-              tvTypes = listOf("Live")
-          }
-          EOF
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
-      - name: Gradle 7.6.3 Kurulumu (Cloudstream Referans Hatası Çözümü)
+      - name: Kendi Kodlarını Derle
         run: |
-          gradle wrapper --gradle-version 7.6.3
+          # Eksik başlatıcıyı oluştur
+          gradle wrapper --gradle-version 8.4
           chmod +x gradlew
-
-      - name: Eklentiyi Derle (.cs3)
-        run: ./gradlew make --no-daemon
-
-      - name: Master JSON Oluştur
-        run: ./gradlew makePluginsJson --no-daemon
+          
+          # Senin orjinal paternindeki derleme komutları
+          ./gradlew make makePluginsJson --no-daemon
 
       - name: Dağıtıma Hazırla
         run: |
@@ -92,7 +43,7 @@ jobs:
             cp build/plugins.json _deploy/plugins.json
           fi
           
-      - name: Yayına Al (Deploy)
+      - name: Yayına Al
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
