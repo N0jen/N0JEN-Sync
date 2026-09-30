@@ -11,11 +11,9 @@ buildscript {
     }
 }
 
-plugins {
-    id("com.android.library")
-    kotlin("android")
-}
-
+// Gradle 9 hatalarını önlemek için plugins bloğu yerine apply metodu kullanıldı
+apply(plugin = "com.android.library")
+apply(plugin = "kotlin-android")
 apply(plugin = "com.lagradost.cloudstream3.gradle")
 
 cloudstream {
