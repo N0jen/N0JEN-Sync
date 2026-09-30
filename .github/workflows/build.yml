@@ -1,4 +1,4 @@
-name: Build Extensions
+name: Build and Deploy Extension
 
 on:
   push:
@@ -10,30 +10,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
     steps:
-      - name: Repoyu Klonla
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Java JDK 17 Kurulumu
-        uses: actions/setup-java@v3
+      - name: Build and deploy plugins
+        uses: recloudstream/github-action@master
         with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Gradle'ı Hazırla
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '7.6.4' # ÇÖZÜM BURASI: Uyumlu Gradle sürümünü zorluyoruz
-          cache-disabled: true
-
-      - name: Eklentiyi Derle
-        run: gradle make --no-build-cache --refresh-dependencies
-
-      - name: Builds Dalına Yükle
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: builds
-          publish_dir: ./build
-          force_orphan: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
