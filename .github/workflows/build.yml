@@ -22,8 +22,8 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Gradle Wrapper Oluştur
-        run: gradle wrapper
+      - name: Gradle Wrapper Oluştur (Sabit Sürüm)
+        run: gradle wrapper --gradle-version 8.4
 
       - name: Gradlew Yetkilendirmesi
         run: chmod +x ./gradlew
@@ -39,7 +39,6 @@ jobs:
           mkdir -p _deploy
           find . -type f -name "*.cs3" -exec cp {} _deploy/ \;
           
-          # JSON dosyalarının oluştuğundan emin olup kopyalıyoruz
           if [ -f "build/plugins.json" ]; then
             cp build/plugins.json _deploy/repo.json
             cp build/plugins.json _deploy/plugins.json
