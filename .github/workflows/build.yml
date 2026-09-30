@@ -22,12 +22,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-
-      - name: Eksik Gradlew Dosyasını Oluştur
+      - name: Sabit Sürüm Gradlew Oluştur (ÇÖZÜM)
         run: |
-          gradle wrapper
+          gradle wrapper --gradle-version 8.4
           chmod +x gradlew
 
       - name: Build Extension
@@ -40,8 +37,10 @@ jobs:
         run: |
           mkdir -p _deploy
           find . -type f -name "*.cs3" -exec cp {} _deploy/ \;
-          cp build/plugins.json _deploy/repo.json
-          cp build/plugins.json _deploy/plugins.json
+          if [ -f "build/plugins.json" ]; then
+            cp build/plugins.json _deploy/repo.json
+            cp build/plugins.json _deploy/plugins.json
+          fi
           
       - name: Upload to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
