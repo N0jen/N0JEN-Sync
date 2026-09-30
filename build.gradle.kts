@@ -5,8 +5,8 @@ buildscript {
         maven("https://jitpack.io")
     }
     dependencies {
-        // Hata veren sürüm adını JitPack'in dayattığı isimle değiştirdik
-        classpath("com.github.recloudstream:gradle:master-master-SNAPSHOT")
+        // Jitpack hatasını atlamak için doğrudan hatasız sürümün kodunu kullanıyoruz
+        classpath("com.github.recloudstream:gradle:32895aedb6")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22")
     }
 }
