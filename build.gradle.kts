@@ -2,15 +2,11 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io") {
-            metadataSources {
-                mavenPom()
-                artifact()
-            }
-        }
+        maven("https://jitpack.io")
     }
     dependencies {
-        classpath("com.github.recloudstream:gradle:master-SNAPSHOT")
+        // Hata veren sürüm adını JitPack'in dayattığı isimle değiştirdik
+        classpath("com.github.recloudstream:gradle:master-master-SNAPSHOT")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22")
     }
 }
@@ -19,11 +15,6 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io") {
-            metadataSources {
-                mavenPom()
-                artifact()
-            }
-        }
+        maven("https://jitpack.io")
     }
 }
