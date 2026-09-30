@@ -1,3 +1,7 @@
+// DÜZELTME 1: Kotlin'in bu kelimeleri tanıması için yollarını içe aktarıyoruz
+import com.android.build.gradle.LibraryExtension
+import com.lagradost.cloudstream3.gradle.CloudstreamExtension
+
 buildscript {
     repositories {
         google()
@@ -15,15 +19,12 @@ buildscript {
     }
 }
 
-// DÜZELTME BURADA: apply(plugin = ...) yerine modern plugins {} bloğunu kullanıyoruz.
-// Bu sayede Kotlin; android, cloudstream ve implementation kelimelerini tanıyacak.
-plugins {
-    id("com.android.library")
-    kotlin("android")
-    id("com.lagradost.cloudstream3.gradle")
-}
+apply(plugin = "com.android.library")
+apply(plugin = "kotlin-android")
+apply(plugin = "com.lagradost.cloudstream3.gradle")
 
-cloudstream {
+// DÜZELTME 2: Kotlin'e cloudstream bloğunu açıkça yapılandırıyoruz
+configure<CloudstreamExtension> {
     pluginName = "N0JEN Sync"
     pluginAuthor = "N0jen"
     pluginDescription = "AtomSpor canlı maç ve TV yayınları"
@@ -31,7 +32,8 @@ cloudstream {
     pluginTypes = listOf("tv")
 }
 
-android {
+// DÜZELTME 3: Kotlin'e android bloğunu açıkça yapılandırıyoruz
+configure<LibraryExtension> {
     namespace = "com.n0jensync"
     compileSdk = 33
     defaultConfig {
@@ -53,10 +55,11 @@ repositories {
     }
 }
 
+// DÜZELTME 4: Kotlin DSL'de apply kullanıldığında implementation yerine add() komutu kullanılır
 dependencies {
-    implementation("com.github.recloudstream:Cloudstream:master-SNAPSHOT")
-    implementation("org.jsoup:jsoup:1.15.3")
+    add("implementation", "com.github.recloudstream:Cloudstream:master-SNAPSHOT")
+    add("implementation", "org.jsoup:jsoup:1.15.3")
     
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
+    add("implementation", "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    add("implementation", "com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
 }
