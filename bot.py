@@ -3,29 +3,38 @@ import os
 import subprocess
 import random
 
-# 1. Aşama: Şifresiz/Bedava Yapay Zeka ile Görsel Üretimi (Pollinations.ai)
-# Her seferinde farklı bir görsel çıkması için prompt sonuna rastgele bir sayı ekliyoruz
 rastgele_sayi = random.randint(1, 1000)
 prompt = f"cyberpunk_city_in_heavy_rain_neon_lights_vertical_{rastgele_sayi}"
 url = f"https://image.pollinations.ai/prompt/{prompt}?width=1080&height=1920&nologo=true"
 
 print("Yapay zekadan görsel indiriliyor...")
-urllib.request.urlretrieve(url, "arkaplan.jpg")
-print("Görsel başarıyla indirildi!")
 
-# 2. Aşama: FFmpeg ile Görseli ve Yapay Yağmur Sesini (White Noise) Birleştirme
-# 60 saniyelik (Shorts) dikey video oluşturuyoruz.
-# anoisesrc=color=brown -> Yağmur ve rüzgar hissiyatı veren beyaz/kahverengi gürültü frekansı
+# Yapay zeka sunucusundan engellenmemek için kendimizi normal bir Chrome tarayıcısı gibi gösteriyoruz
+req = urllib.request.Request(
+    url, 
+    headers={
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+)
+
+try:
+    with urllib.request.urlopen(req) as response, open("arkaplan.jpg", 'wb') as out_file:
+        out_file.write(response.read())
+    print("Görsel başarıyla indirildi!")
+except Exception as e:
+    print(f"Hata: Yapay zeka sunucusu şu an yanıt vermiyor -> {e}")
+    exit(1)
+
 print("Video renderlanıyor (60 Saniye Shorts)...")
 
 ffmpeg_komutu = [
     "ffmpeg", "-y",
-    "-loop", "1", "-i", "arkaplan.jpg",                   # Görseli döngüye al
-    "-f", "lavfi", "-i", "anoisesrc=a=0.1:c=brown",       # Yağmur/Rüzgar benzeri ses üret
-    "-t", "60",                                           # 60 saniye süre sınırı (Shorts)
-    "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920", # Dikey formata (9:16) zorla
-    "-c:v", "libx264", "-tune", "stillimage", "-pix_fmt", "yuv420p", # YouTube uyumlu video formatı
-    "-c:a", "aac", "-b:a", "128k",                        # Ses formatı
+    "-loop", "1", "-i", "arkaplan.jpg",
+    "-f", "lavfi", "-i", "anoisesrc=a=0.1:c=brown",
+    "-t", "60",
+    "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920",
+    "-c:v", "libx264", "-tune", "stillimage", "-pix_fmt", "yuv420p",
+    "-c:a", "aac", "-b:a", "128k",
     "yeni_short_video.mp4"
 ]
 
