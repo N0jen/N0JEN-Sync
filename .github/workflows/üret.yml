@@ -16,8 +16,12 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: FFmpeg Kurulumu (Garanti Yöntem)
-      run: sudo apt-get update && sudo apt-get install ffmpeg -y
+    - name: Hızlı FFmpeg Kurulumu (Statik Yöntem)
+      run: |
+        sudo curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o ffmpeg.tar.xz
+        sudo tar -xf ffmpeg.tar.xz
+        sudo mv ffmpeg-*-amd64-static/ffmpeg /usr/local/bin/
+        sudo mv ffmpeg-*-amd64-static/ffprobe /usr/local/bin/
 
     - name: Botu Çalıştır ve Videoyu Üret
       run: python bot.py
