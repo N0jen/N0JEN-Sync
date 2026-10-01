@@ -1,0 +1,31 @@
+name: Otomatik Shorts Üretici
+
+# Bu botu GitHub'daki "Actions" sekmesinden manuel tetikleyebilirsin.
+# (İstersen buraya cron ekleyerek her gün saat 12:00'de otomatik çalışmasını da sağlayabiliriz)
+on:
+  workflow_dispatch: 
+
+jobs:
+  video-uret:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Depoyu Çek
+      uses: actions/checkout@v3
+
+    - name: Python Kurulumu
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: FFmpeg Kurulumu (Video Motoru)
+      run: sudo apt-get install ffmpeg -y
+
+    - name: Botu Çalıştır ve Videoyu Üret
+      run: python bot.py
+
+    - name: Üretilen Videoyu GitHub'a Kaydet (Artifact)
+      uses: actions/upload-artifact@v3
+      with:
+        name: hazir-shorts-videolarim
+        path: yeni_short_video.mp4
