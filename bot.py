@@ -27,29 +27,20 @@ except Exception as e:
     with urllib.request.urlopen(req_yedek, timeout=15) as response, open("arkaplan.jpg", 'wb') as out_file:
         out_file.write(response.read())
 
-print("Video renderlanıyor (Gerçekçi Yağmur Damlaları ekleniyor)...")
+print("Video renderlanıyor (Cızırtı giderildi, görsel düzeltildi)...")
 
-# Yeni Akıllı Filtre: Resmin boyutu ne olursa olsun altından %5'lik logoyu (ih*0.95) keser, 
-# ardından güvenli bir şekilde 1080x1920 Shorts boyutuna sündürmeden oturtur.
-filter_complex = (
-    "[0:v]crop=iw:ih*0.95:0:0,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920[img];"
-    "color=c=black:s=1080x1920:d=60:rate=30[black];"
-    "[black]noise=alls=80:allf=t+u,eq=gamma=5,boxblur=1:20[rain];"
-    "[img][rain]blend=all_mode='screen'[outv]"
-)
-
+# Mor ekran hatasını önlemek için filtreyi temizledik. Sadece logoyu kesip ekrana tam oturtuyoruz.
+# Ses için: Pembe gürültü (pink noise) kullanıp 'lowpass=f=800' filtresiyle ince radyo cızırtılarını kesiyoruz, geriye tok bir yağmur/rüzgar sesi kalıyor.
 ffmpeg_komutu = [
     "ffmpeg", "-y",
     "-loop", "1", "-framerate", "30", "-i", "arkaplan.jpg",
-    "-f", "lavfi", "-i", "anoisesrc=a=0.1:c=brown",
+    "-f", "lavfi", "-i", "anoisesrc=c=pink:a=0.1,lowpass=f=800,highpass=f=200", 
     "-t", "60",
-    "-filter_complex", filter_complex,
-    "-map", "[outv]",
-    "-map", "1:a",
-    "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
+    "-vf", "crop=iw:ih*0.95:0:0,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,format=yuv420p",
+    "-c:v", "libx264", "-preset", "ultrafast",
     "-c:a", "aac", "-b:a", "128k",
     "yeni_short_video.mp4"
 ]
 
 subprocess.run(ffmpeg_komutu)
-print("İşlem Tamam! Yağmur efektli yeni_short_video.mp4 hazır.")
+print("İşlem Tamam! Temiz yeni_short_video.mp4 hazır.")
