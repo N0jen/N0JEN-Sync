@@ -3,28 +3,37 @@ import os
 import subprocess
 import random
 
+print("Görsel hazırlanıyor...")
+
+# A Planı: Yapay Zeka (Pollinations)
 rastgele_sayi = random.randint(1, 1000)
 prompt = f"cyberpunk_city_in_heavy_rain_neon_lights_vertical_{rastgele_sayi}"
-url = f"https://image.pollinations.ai/prompt/{prompt}?width=1080&height=1920&nologo=true"
+url_ai = f"https://image.pollinations.ai/prompt/{prompt}?width=1080&height=1920&nologo=true"
 
-print("Yapay zekadan görsel indiriliyor...")
+# B Planı: Eğer AI sunucusu engellerse kullanılacak çok şık yedek Cyberpunk/Neon görseli
+url_yedek = "https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=1080&h=1920&fit=crop"
 
-# Yapay zeka sunucusundan engellenmemek için kendimizi normal bir Chrome tarayıcısı gibi gösteriyoruz
 req = urllib.request.Request(
-    url, 
-    headers={
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
+    url_ai, 
+    headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
 )
 
 try:
-    with urllib.request.urlopen(req) as response, open("arkaplan.jpg", 'wb') as out_file:
+    # 1. Adım: Yapay Zekayı Dene
+    print("Yapay zekadan görsel talep ediliyor...")
+    with urllib.request.urlopen(req, timeout=15) as response, open("arkaplan.jpg", 'wb') as out_file:
         out_file.write(response.read())
-    print("Görsel başarıyla indirildi!")
+    print("Görsel yapay zekadan başarıyla indirildi!")
+    
 except Exception as e:
-    print(f"Hata: Yapay zeka sunucusu şu an yanıt vermiyor -> {e}")
-    exit(1)
+    # 2. Adım: Hata verirse çökmek yerine yedek görseli kullan
+    print(f"Yapay zeka sunucusu yanıt vermedi ({e}). B planı devreye giriyor...")
+    req_yedek = urllib.request.Request(url_yedek, headers={'User-Agent': 'Mozilla/5.0'})
+    with urllib.request.urlopen(req_yedek) as response, open("arkaplan.jpg", 'wb') as out_file:
+        out_file.write(response.read())
+    print("Yedek cyberpunk görseli başarıyla indirildi!")
 
+# 3. Adım: FFmpeg ile Video Render
 print("Video renderlanıyor (60 Saniye Shorts)...")
 
 ffmpeg_komutu = [
@@ -33,7 +42,7 @@ ffmpeg_komutu = [
     "-f", "lavfi", "-i", "anoisesrc=a=0.1:c=brown",
     "-t", "60",
     "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920",
-    "-c:v", "libx264", "-tune", "stillimage", "-pix_fmt", "yuv420p",
+    "-c:v", "libx264", "-preset", "ultrafast", "-tune", "stillimage", "-pix_fmt", "yuv420p",
     "-c:a", "aac", "-b:a", "128k",
     "yeni_short_video.mp4"
 ]
