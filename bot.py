@@ -10,8 +10,8 @@ rastgele_sayi = random.randint(1, 1000)
 prompt = f"cyberpunk_city_in_heavy_rain_neon_lights_vertical_{rastgele_sayi}"
 url_ai = f"https://image.pollinations.ai/prompt/{prompt}?width=1080&height=1920&nologo=true"
 
-# B Planı: Eğer AI sunucusu engellerse kullanılacak çok şık yedek Cyberpunk/Neon görseli
-url_yedek = "https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=1080&h=1920&fit=crop"
+# B Planı: Asla silinmeyecek ve engellenmeyecek %100 çalışan sabit bir Neon Şehir görseli (Wikimedia)
+url_yedek = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Tokyo_Shinjuku_Kabukicho_Neon_Night.jpg/1080px-Tokyo_Shinjuku_Kabukicho_Neon_Night.jpg"
 
 req = urllib.request.Request(
     url_ai, 
@@ -29,7 +29,7 @@ except Exception as e:
     # 2. Adım: Hata verirse çökmek yerine yedek görseli kullan
     print(f"Yapay zeka sunucusu yanıt vermedi ({e}). B planı devreye giriyor...")
     req_yedek = urllib.request.Request(url_yedek, headers={'User-Agent': 'Mozilla/5.0'})
-    with urllib.request.urlopen(req_yedek) as response, open("arkaplan.jpg", 'wb') as out_file:
+    with urllib.request.urlopen(req_yedek, timeout=15) as response, open("arkaplan.jpg", 'wb') as out_file:
         out_file.write(response.read())
     print("Yedek cyberpunk görseli başarıyla indirildi!")
 
