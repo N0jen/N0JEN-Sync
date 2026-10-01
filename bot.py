@@ -4,7 +4,7 @@ import random
 
 print("Huzurlu, sıcak bir oda görseli hazırlanıyor...")
 
-# 1. GÖRSEL: Huzurlu Oda ve Uyuyan Köpek (Her seferinde farklı)
+# 1. GÖRSEL: Huzurlu Oda ve Uyuyan Köpek
 rastgele_sayi = random.randint(1, 10000)
 prompt = f"Cozy_warm_living_room_cute_dog_sleeping_peacefully_on_a_sofa_large_window_showing_heavy_rain_outside_warm_lamp_light_cinematic_vertical_{rastgele_sayi}"
 url_ai = f"https://image.pollinations.ai/prompt/{prompt}?width=1080&height=1920&nologo=true"
@@ -21,18 +21,17 @@ except Exception as e:
         out_file.write(response.read())
     print("Yedek görsel indirildi.")
 
-yagmur_seed = random.randint(1, 1000)
 print("Video renderlanıyor (Damlalar ve Tok Yağmur Sesi ekleniyor)...")
 
-# Çökmeye sebep olan "all_opacity" komutu tamamen kaldırıldı! 
+# Çökmeye sebep olan "seed" komutu kaldırıldı! (t+u zaten damlaları hareketlendirecek)
 filter_complex = (
     f"[0:v]crop=iw:ih*0.95:0:0,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,format=yuv420p[bg];"
     f"color=c=black:s=1080x1920:d=60:rate=30[black];"
-    f"[black]noise=alls=80:allf=t+u:seed={yagmur_seed},eq=gamma=7,boxblur=1:20,format=yuv420p[rain];"
+    f"[black]noise=alls=80:allf=t+u,eq=gamma=7,boxblur=1:20,format=yuv420p[rain];"
     f"[bg][rain]blend=all_mode='screen',format=yuv420p[outv]"
 )
 
-# Ses Komutu: Kahverengi gürültü (brown) üretip, ince radyo cızırtılarını (lowpass) tamamen keser. Geriye kalın bir fırtına/yağmur uğultusu kalır.
+# Ses: Kahverengi gürültü (brown) üretip ince frekansları (lowpass) keserek kalın uğultu elde ediyoruz
 ffmpeg_komutu = [
     "ffmpeg", "-y",
     "-loop", "1", "-framerate", "30", "-i", "arkaplan.jpg",
@@ -46,6 +45,5 @@ ffmpeg_komutu = [
     "yeni_short_video.mp4"
 ]
 
-# check=True sayesinde herhangi bir gizli hatayı bize gösterecek
 subprocess.run(ffmpeg_komutu, check=True)
 print("İşlem Tamam! yeni_short_video.mp4 hazır.")
