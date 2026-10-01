@@ -16,8 +16,8 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: FFmpeg Kurulumu (Video Motoru)
-      run: sudo apt-get update && sudo apt-get install ffmpeg -y
+    - name: FFmpeg Kurulumu (Hızlı Yöntem)
+      uses: FedericoCarboni/setup-ffmpeg@v3
 
     - name: Botu Çalıştır ve Videoyu Üret
       run: python bot.py
