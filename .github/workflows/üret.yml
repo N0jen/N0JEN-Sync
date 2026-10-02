@@ -1,37 +1,39 @@
-name: Otomatik Shorts Üretici
+name: Yağmur Videosu Oluşturucu Bot
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Sadece GitHub üzerinden manuel olarak butona bastığınızda çalışır
 
 jobs:
-  video-uret:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Depoyu Çek
-      uses: actions/checkout@v4
+      - name: Kodları İndir
+        uses: actions/checkout@v4
 
-    - name: Python Kurulumu
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Python Kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    - name: Kütüphaneleri Kur
-      run: pip install replicate requests
+      - name: FFmpeg Kurulumu (Hatanın Çözüldüğü Yer)
+        uses: FedericoCarboni/setup-ffmpeg@v3
+        with:
+          architecture: x64
 
-    - name: Hızlı FFmpeg Kurulumu
-      run: |
-        sudo curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o ffmpeg.tar.xz
-        sudo tar -xf ffmpeg.tar.xz
-        sudo mv ffmpeg-*-amd64-static/ffmpeg /usr/local/bin/
+      - name: Python Kütüphanelerini Kur
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
 
-    - name: Profesyonel Botu Çalıştır
-      env:
-        REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
-      run: python bot.py
+      - name: Video Botunu Çalıştır
+        env:
+          REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
+        run: python bot.py
 
-    - name: Üretilen Videoyu İndirmeye Hazırla
-      uses: actions/upload-artifact@v4
-      with:
-        name: hazir-shorts-videolarim
-        path: final_shorts.mp4
+      - name: Hazır Videoyu Çıktı Olarak Yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-rain-video
+          path: final_shorts.mp4
+          retention-days: 7
