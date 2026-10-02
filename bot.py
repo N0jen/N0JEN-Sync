@@ -1,4 +1,3 @@
-
 import os
 import time
 import requests
@@ -23,15 +22,15 @@ def bekle_ve_al(kontrol_linki):
         else:
             print(f"-> Çiziliyor (Durum: {durum})... Bekleniyor.")
 
-print("1. Aşama: Kusursuz 8K Anime Odası Çiziliyor...")
+print("1. Aşama: Camında Yağmur Damlaları Olan 8K Oda Çiziliyor...")
 
-# Sadece Flux kullanıyoruz. Görüntüyü bozacak hiçbir video motoru araya giremez.
 baslat_flux = requests.post(
     "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions",
     headers=HEADERS,
     json={
         "input": {
-            "prompt": "Masterpiece, cozy warm bedroom interior, a person sleeping peacefully under a warm blanket in bed, massive window looking outside at heavy rain, street lights glowing in rain, cinematic lighting, 8k resolution, highly detailed, perfect proportions, studio ghibli anime style",
+            # Prompta özellikle camdaki su damlaları ve süzülen yağmur izleri eklendi!
+            "prompt": "Masterpiece, cozy warm bedroom interior, a person sleeping peacefully under a warm blanket in bed. Massive window looking outside at heavy rain. CLOSE UP of window glass completely covered in heavy water drops and rain streams reflecting the street lights. Cinematic lighting, 8k resolution, perfectly proportioned, studio ghibli anime style",
             "aspect_ratio": "9:16",
             "output_format": "jpg"
         }
@@ -49,15 +48,14 @@ print("-> Görsel çizildi, bilgisayara indiriliyor...")
 with open("source_image.jpg", "wb") as f:
     f.write(requests.get(image_url).content)
 
-print("2. Aşama: Profesyonel Montaj ve Ses Tasarımı (FFmpeg)...")
-print("-> Görüntünün bozulmasına/erimesine izin verilmeden doğrudan Lofi kurgusu yapılıyor...")
+print("2. Aşama: Şakır Şakır Yağmur Sesi ile Montaj (FFmpeg)...")
 
-# Resmi alır, orantısını JİLET gibi koruyarak ekrana oturtur. 
-# Üzerine o harika tok yağmur sesini ekler ve 60 saniyelik kusursuz bir video çıkarır.
+# 'brown' (rüzgar) yerine 'pink' (yağmur) gürültüsü kullanıldı.
+# highpass ve lowpass filtreleri ile ses tam olarak cama vuran su damlalarına dönüştürüldü!
 ffmpeg_cmd = [
     "ffmpeg", "-y",
     "-loop", "1", "-framerate", "30", "-i", "source_image.jpg",
-    "-f", "lavfi", "-i", "anoisesrc=a=0.3:c=brown,lowpass=f=700",
+    "-f", "lavfi", "-i", "anoisesrc=a=0.4:c=pink,highpass=f=300,lowpass=f=2500",
     "-t", "60",
     "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920",
     "-c:v", "libx264", "-preset", "fast", "-pix_fmt", "yuv420p",
@@ -66,4 +64,4 @@ ffmpeg_cmd = [
 ]
 
 subprocess.run(ffmpeg_cmd, check=True)
-print("İşlem Başarılı! %100 profesyonel görünümlü final_shorts.mp4 oluşturuldu.")
+print("İşlem Başarılı! Gerçek yağmur sesli final_shorts.mp4 oluşturuldu.")
