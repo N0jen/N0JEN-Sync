@@ -10,7 +10,6 @@ HEADERS = {
 }
 
 def bekle_ve_al(kontrol_linki):
-    """API'yi yormadan işlemin bitmesini sabırla bekleyen döngü"""
     while True:
         time.sleep(10)
         cevap = requests.get(kontrol_linki, headers=HEADERS, timeout=30).json()
@@ -25,7 +24,6 @@ def bekle_ve_al(kontrol_linki):
 
 print("1. Aşama: Sinematik Anime Oda ve Yağmur Görseli Üretiliyor...")
 
-# Flux modeli (Adresle çalışmaya devam eder)
 baslat_flux = requests.post(
     "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions",
     headers=HEADERS,
@@ -48,14 +46,13 @@ print(f"-> Görsel başarıyla çizildi. Link: {image_url}")
 
 print("2. Aşama: Görsel Canlandırılıyor (SVD Motoru Başlatılıyor)...")
 
-# SVD Modeli (404 almamak için doğrudan Değişmez Kimlik Şifresi ile çağırıyoruz)
 baslat_svd = requests.post(
     "https://api.replicate.com/v1/predictions",
     headers=HEADERS,
     json={
         "version": "3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
         "input": {
-            "image": image_url,
+            "input_image": image_url, # İŞTE DÜZELTİLEN O TEK KELİME! 
             "sizing_strategy": "maintain_aspect_ratio",
             "motion_bucket_id": 127,
             "frames_per_second": 6
