@@ -3,16 +3,15 @@ import time
 import requests
 import subprocess
 import logging
-from typing import Optional
 
-# Loglama ayarları (Print yerine daha profesyonel takip için)
+# Loglama ayarları
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 class RainVideoGenerator:
     def __init__(self):
         self.api_token = os.environ.get("REPLICATE_API_TOKEN")
         if not self.api_token:
-            raise ValueError("REPLICATE_API_TOKEN çevre değişkeni bulunamadı!")
+            raise ValueError("REPLICATE_API_TOKEN çevre değişkeni (secret) bulunamadı!")
             
         self.headers = {
             "Authorization": f"Bearer {self.api_token}",
@@ -40,7 +39,7 @@ class RainVideoGenerator:
         raise TimeoutError("Görsel üretimi zaman aşımına uğradı.")
 
     def generate_image(self, output_path: str = "source_image.jpg") -> str:
-        """Flux modeli ile görseli üretir ve bilgisayara kaydeder."""
+        """Flux modeli ile görseli üretir ve kaydeder."""
         logging.info("1. Aşama: Camında yağmur damlaları olan 8K görsel çiziliyor...")
         
         prompt = (
@@ -78,10 +77,7 @@ class RainVideoGenerator:
         """İndirilen görseli dalgalanan yağmur sesleriyle birleştirerek video oluşturur."""
         logging.info("2. Aşama: Dinamik yağmur sesi ile FFmpeg montajı yapılıyor...")
         
-        # SES MÜHENDİSLİĞİ:
-        # 1. base_rain: Arka planda sürekli yağan sabit yağmur (pink noise)
-        # 2. gusts: Rüzgar ve cama vuran şiddetli yağmur (brown noise). 
-        #           'volume' filtresindeki sinüs dalgası (sin) sayesinde her 12 saniyede bir sesi yavaşça yükselip alçalır.
+        # SES MÜHENDİSLİĞİ: Yağmur şiddeti her 12 saniyede bir yavaşça artıp azalır.
         audio_filtergraph = (
             "anoisesrc=a=0.3:c=pink,highpass=f=300,lowpass=f=2500[base_rain]; "
             "anoisesrc=a=0.4:c=brown,highpass=f=200,lowpass=f=1200,"
@@ -92,7 +88,7 @@ class RainVideoGenerator:
         ffmpeg_cmd = [
             "ffmpeg", "-y",
             "-loop", "1", "-framerate", "30", "-i", image_path,
-            "-f", "lavfi", "-i", "anullsrc", # Lavfi filtergraph'ı başlatmak için dummy input
+            "-f", "lavfi", "-i", "anullsrc",
             "-t", str(duration),
             "-filter_complex", audio_filtergraph,
             "-map", "0:v", "-map", "[a_out]",
