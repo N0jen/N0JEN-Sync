@@ -22,14 +22,15 @@ def bekle_ve_al(kontrol_linki):
         else:
             print(f"-> İşleniyor (Durum: {durum})... Bekleniyor.")
 
-print("1. Aşama: Sinematik Anime Oda ve Yağmur Görseli Üretiliyor...")
+print("1. Aşama: Geniş Açılı, Orantılı Oda Çiziliyor...")
 
+# Odanın yamulmaması için komuta "wide angle" (geniş açı) ve "perfectly proportioned" (kusursuz orantı) eklendi.
 baslat_flux = requests.post(
     "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions",
     headers=HEADERS,
     json={
         "input": {
-            "prompt": "Anime Studio Ghibli style, cozy warm bedroom interior, a person sleeping peacefully under a warm blanket in bed, massive window looking outside at heavy rain, street lights glowing in rain, cinematic lighting, masterpiece, 8k, vertical aspect ratio",
+            "prompt": "Wide angle shot, perfectly proportioned cozy bedroom interior, a person sleeping perfectly still under a warm blanket in bed, massive window looking outside at heavy rain, cinematic lighting, symmetric, 8k, highly detailed",
             "aspect_ratio": "9:16",
             "output_format": "jpg"
         }
@@ -42,19 +43,22 @@ if baslat_flux.status_code != 201:
 
 image_output = bekle_ve_al(baslat_flux.json()["urls"]["get"])
 image_url = image_output[0] if isinstance(image_output, list) else image_output
-print(f"-> Görsel başarıyla çizildi. Link: {image_url}")
+print(f"-> Görsel çizildi. Link: {image_url}")
 
-print("2. Aşama: Görsel Canlandırılıyor (SVD Motoru Başlatılıyor)...")
+print("2. Aşama: Sabit Oda, Hareketli Yağmur (SVD Motoru)...")
 
+# Hareket şiddeti (motion_bucket_id) 127'den 40'a düşürüldü! 
+# Böylece yatak/duvar erimeyecek, sadece hafif ve doğal hareketler (yağmur) olacak.
 baslat_svd = requests.post(
     "https://api.replicate.com/v1/predictions",
     headers=HEADERS,
     json={
         "version": "3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
         "input": {
-            "input_image": image_url, # İŞTE DÜZELTİLEN O TEK KELİME! 
+            "input_image": image_url,
             "sizing_strategy": "maintain_aspect_ratio",
-            "motion_bucket_id": 127,
+            "motion_bucket_id": 40, 
+            "cond_aug": 0.02,
             "frames_per_second": 6
         }
     },
@@ -66,23 +70,25 @@ if baslat_svd.status_code != 201:
 
 video_output = bekle_ve_al(baslat_svd.json()["urls"]["get"])
 video_url = video_output if isinstance(video_output, str) else video_output[0]
-print("-> Hareketli video hazırlandı, bilgisayara indiriliyor...")
+print("-> Hareketli video indiriliyor...")
 
 with open("raw_loop.mp4", "wb") as f:
     f.write(requests.get(video_url).content)
 
-print("3. Aşama: 60 Saniyeye Uzatma ve Tok Yağmur Sesi Ekleme...")
+print("3. Aşama: Orantıyı Bozmadan 60 Saniyeye Uzatma...")
 
+# FFmpeg'in görüntüyü zorla sündürüp yamultmasını engelledik. 
+# Artık orijinal yüksekliği koruyup, eksik kalan yerleri kırpmadan merkeze oturtacak.
 ffmpeg_cmd = [
     "ffmpeg", "-y",
     "-stream_loop", "-1", "-i", "raw_loop.mp4",
     "-f", "lavfi", "-i", "anoisesrc=a=0.3:c=brown,lowpass=f=700",
     "-t", "60",
-    "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920",
+    "-vf", "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2",
     "-c:v", "libx264", "-preset", "fast", "-pix_fmt", "yuv420p",
     "-c:a", "aac", "-b:a", "128k",
     "final_shorts.mp4"
 ]
 
 subprocess.run(ffmpeg_cmd, check=True)
-print("İşlem Başarılı! final_shorts.mp4 kusursuz şekilde oluşturuldu.")
+print("İşlem Başarılı! Orantısı düzeltilmiş final_shorts.mp4 hazır.")
