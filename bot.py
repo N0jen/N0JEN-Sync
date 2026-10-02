@@ -2,7 +2,6 @@ import os
 import time
 import requests
 import subprocess
-import base64
 
 TOKEN = os.environ.get("REPLICATE_API_TOKEN")
 HEADERS = {
@@ -11,18 +10,19 @@ HEADERS = {
 }
 
 def guvenli_dogrudan_baglanti(model_yolu, girdi):
-    """Zaman aşımı ve kütüphane çökmelerini engelleyen doğrudan API bağlantısı."""
     print(f"-> {model_yolu} tetikleniyor...")
     url = f"https://api.replicate.com/v1/models/{model_yolu}/predictions"
     
-    # İşlem emrini gönderiyoruz
     baslat = requests.post(url, headers=HEADERS, json={"input": girdi}, timeout=30)
-    baslat.raise_for_status()
+    
+    # 422 veya 500 gibi bir çökme olursa, hatayı gizleme! Direkt neyi beğenmediğini ekrana yazdır.
+    if baslat.status_code != 201:
+        raise Exception(f"Model İşlemi Reddetti! Hata Detayı: {baslat.text}")
+        
     kontrol_linki = baslat.json()["urls"]["get"]
     
-    # İşlemin bitmesini çökmeden, sabırla bekliyoruz
     while True:
-        time.sleep(10) # Sunucuyu yormamak için 10 saniyede bir soruyoruz
+        time.sleep(10)
         durum_cevap = requests.get(kontrol_linki, headers=HEADERS, timeout=30).json()
         durum = durum_cevap["status"]
         
@@ -30,13 +30,13 @@ def guvenli_dogrudan_baglanti(model_yolu, girdi):
             print("-> Yapay zeka işlemini başarıyla tamamladı!")
             return durum_cevap["output"]
         elif durum in ["failed", "canceled"]:
-            raise Exception(f"Model hata verdi: {durum_cevap.get('error')}")
+            raise Exception(f"Model kendi içinde hata verdi: {durum_cevap.get('error')}")
         else:
             print(f"-> Model çalışıyor (Durum: {durum})... Bekleniyor.")
 
 print("1. Aşama: Sinematik Anime Oda ve Yağmur Görseli Üretiliyor...")
 
-# Flux modeli ile görsel üretimi
+# Flux ile görsel üretimi (Sadece ihtiyacı olan parametreler)
 image_output = guvenli_dogrudan_baglanti(
     "black-forest-labs/flux-schnell",
     {
@@ -46,31 +46,25 @@ image_output = guvenli_dogrudan_baglanti(
     }
 )
 
+# Sadece temiz resmi linkini alıyoruz
 image_url = image_output[0] if isinstance(image_output, list) else image_output
-print("Görsel başarıyla çizildi, indiriliyor...")
-with open("source_image.jpg", "wb") as f:
-    f.write(requests.get(image_url).content)
+print(f"-> Görsel başarıyla çizildi. Link: {image_url}")
 
 print("2. Aşama: Görsel Canlandırılıyor (Hareketli Video Modeli Başlıyor)...")
 
-# Resmi Kling'in hata vermeden okuyabilmesi için Base64 formatına (metne) çeviriyoruz
-with open("source_image.jpg", "rb") as img_file:
-    b64_string = base64.b64encode(img_file.read()).decode('utf-8')
-data_uri = f"data:image/jpeg;base64,{b64_string}"
-
-# Kling'e resmi metin dosyası olarak yolluyoruz, artık 422 hatası veremez
+# Base64 metinlerini veya 'mode' gibi fazla parametreleri kaldırdık. 
+# Sadece temiz linki ve hareket promptunu veriyoruz.
 video_output = guvenli_dogrudan_baglanti(
     "kwaivgi/kling-v1.6-standard",
     {
-        "image": data_uri,
-        "prompt": "Raindrops falling down the window glass, gentle rain ripples, soft breathing of sleeping person, smooth looping motion, cozy ambiance",
-        "duration": 5,
-        "mode": "standard"
+        "image": image_url,
+        "prompt": "Raindrops falling down the window glass, gentle rain ripples, soft breathing of sleeping person, smooth looping motion, cozy ambiance"
     }
 )
 
 video_url = str(video_output)
-print("Hareketli video hazırlandı, bilgisayara indiriliyor...")
+print("-> Hareketli video hazırlandı, bilgisayara indiriliyor...")
+
 with open("raw_loop.mp4", "wb") as f:
     f.write(requests.get(video_url).content)
 
