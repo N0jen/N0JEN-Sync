@@ -9,61 +9,65 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-def guvenli_dogrudan_baglanti(model_yolu, girdi):
-    print(f"-> {model_yolu} modeline bağlanılıyor...")
-    
-    # Tüm kilitleri aşan evrensel API giriş kapısı
-    baslat_url = f"https://api.replicate.com/v1/models/{model_yolu}/predictions"
-    baslat = requests.post(baslat_url, headers=HEADERS, json={"input": girdi}, timeout=30)
-    
-    if baslat.status_code != 201:
-        raise Exception(f"Model Kapalı veya İzin İstiyor! Hata Detayı: {baslat.text}")
-        
-    kontrol_linki = baslat.json()["urls"]["get"]
-    
+def bekle_ve_al(kontrol_linki):
+    """API'yi yormadan işlemin bitmesini sabırla bekleyen döngü"""
     while True:
         time.sleep(10)
-        durum_cevap = requests.get(kontrol_linki, headers=HEADERS, timeout=30).json()
-        durum = durum_cevap["status"]
-        
+        cevap = requests.get(kontrol_linki, headers=HEADERS, timeout=30).json()
+        durum = cevap["status"]
         if durum == "succeeded":
-            print(f"-> İşlem başarıyla bitti!")
-            return durum_cevap["output"]
+            print("-> İşlem başarıyla bitti!")
+            return cevap["output"]
         elif durum in ["failed", "canceled"]:
-            raise Exception(f"Model kendi içinde çöktü: {durum_cevap.get('error')}")
+            raise Exception(f"Hata: {cevap.get('error')}")
         else:
-            print(f"-> Model çalışıyor (Durum: {durum})... Bekleniyor.")
+            print(f"-> İşleniyor (Durum: {durum})... Bekleniyor.")
 
 print("1. Aşama: Sinematik Anime Oda ve Yağmur Görseli Üretiliyor...")
 
-# Flux modeli ile sorunsuz görsel üretimi
-image_output = guvenli_dogrudan_baglanti(
-    "black-forest-labs/flux-schnell",
-    {
-        "prompt": "Anime Studio Ghibli style, cozy warm bedroom interior, a person sleeping peacefully under a warm blanket in bed, massive window looking outside at heavy rain, street lights glowing in rain, cinematic lighting, masterpiece, 8k, vertical aspect ratio",
-        "aspect_ratio": "9:16",
-        "output_format": "jpg"
-    }
+# Flux modeli (Adresle çalışmaya devam eder)
+baslat_flux = requests.post(
+    "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions",
+    headers=HEADERS,
+    json={
+        "input": {
+            "prompt": "Anime Studio Ghibli style, cozy warm bedroom interior, a person sleeping peacefully under a warm blanket in bed, massive window looking outside at heavy rain, street lights glowing in rain, cinematic lighting, masterpiece, 8k, vertical aspect ratio",
+            "aspect_ratio": "9:16",
+            "output_format": "jpg"
+        }
+    },
+    timeout=30
 )
 
+if baslat_flux.status_code != 201:
+    raise Exception(f"Flux Reddedildi: {baslat_flux.text}")
+
+image_output = bekle_ve_al(baslat_flux.json()["urls"]["get"])
 image_url = image_output[0] if isinstance(image_output, list) else image_output
 print(f"-> Görsel başarıyla çizildi. Link: {image_url}")
 
-print("2. Aşama: Görsel Canlandırılıyor (Stable Video Diffusion Motoru Başlatılıyor)...")
+print("2. Aşama: Görsel Canlandırılıyor (SVD Motoru Başlatılıyor)...")
 
-# Tamamen AÇIK KAYNAKLI, sözleşme veya onay istemeyen rock-solid (kaya gibi sağlam) motor!
-# Yağmur, su ve rüzgar gibi doğal hareketleri mükemmel şekilde canlandırır.
-video_output = guvenli_dogrudan_baglanti(
-    "stability-ai/stable-video-diffusion",
-    {
-        "image": image_url,
-        "sizing_strategy": "maintain_aspect_ratio",
-        "frames_per_second": 16,
-        "motion_bucket_id": 127
-    }
+# SVD Modeli (404 almamak için doğrudan Değişmez Kimlik Şifresi ile çağırıyoruz)
+baslat_svd = requests.post(
+    "https://api.replicate.com/v1/predictions",
+    headers=HEADERS,
+    json={
+        "version": "3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
+        "input": {
+            "image": image_url,
+            "sizing_strategy": "maintain_aspect_ratio",
+            "motion_bucket_id": 127,
+            "frames_per_second": 6
+        }
+    },
+    timeout=30
 )
 
-# Çıktı formatını güvenceye alıyoruz
+if baslat_svd.status_code != 201:
+    raise Exception(f"SVD Reddedildi: {baslat_svd.text}")
+
+video_output = bekle_ve_al(baslat_svd.json()["urls"]["get"])
 video_url = video_output if isinstance(video_output, str) else video_output[0]
 print("-> Hareketli video hazırlandı, bilgisayara indiriliyor...")
 
