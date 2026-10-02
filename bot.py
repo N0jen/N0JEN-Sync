@@ -10,33 +10,45 @@ HEADERS = {
 }
 
 def guvenli_dogrudan_baglanti(model_yolu, girdi):
-    print(f"-> {model_yolu} tetikleniyor...")
-    url = f"https://api.replicate.com/v1/models/{model_yolu}/predictions"
+    print(f"-> {model_yolu} için güvenli bağlantı kuruluyor...")
     
-    baslat = requests.post(url, headers=HEADERS, json={"input": girdi}, timeout=30)
+    # 1. Akıllı Versiyon Çözücü: Modelin en güncel ve izinli versiyon şifresini (hash) bulur
+    bilgi_cevap = requests.get(f"https://api.replicate.com/v1/models/{model_yolu}", headers=HEADERS, timeout=30)
     
-    # 422 veya 500 gibi bir çökme olursa, hatayı gizleme! Direkt neyi beğenmediğini ekrana yazdır.
+    if bilgi_cevap.status_code == 200 and bilgi_cevap.json().get("latest_version"):
+        # Versiyon bulundu, en sağlam kapıdan (predictions API) giriş yapıyoruz
+        v_id = bilgi_cevap.json()["latest_version"]["id"]
+        baslat_url = "https://api.replicate.com/v1/predictions"
+        payload = {"version": v_id, "input": girdi}
+    else:
+        # Donanım modelleri (ör. Flux) için standart giriş
+        baslat_url = f"https://api.replicate.com/v1/models/{model_yolu}/predictions"
+        payload = {"input": girdi}
+        
+    # 2. Emri gönderiyoruz
+    baslat = requests.post(baslat_url, headers=HEADERS, json=payload, timeout=30)
+    
     if baslat.status_code != 201:
         raise Exception(f"Model İşlemi Reddetti! Hata Detayı: {baslat.text}")
         
     kontrol_linki = baslat.json()["urls"]["get"]
     
+    # 3. Sonucu sabırla bekliyoruz
     while True:
         time.sleep(10)
         durum_cevap = requests.get(kontrol_linki, headers=HEADERS, timeout=30).json()
         durum = durum_cevap["status"]
         
         if durum == "succeeded":
-            print("-> Yapay zeka işlemini başarıyla tamamladı!")
+            print(f"-> {model_yolu} işlemini başarıyla tamamladı!")
             return durum_cevap["output"]
         elif durum in ["failed", "canceled"]:
-            raise Exception(f"Model kendi içinde hata verdi: {durum_cevap.get('error')}")
+            raise Exception(f"Model kendi içinde çöktü: {durum_cevap.get('error')}")
         else:
             print(f"-> Model çalışıyor (Durum: {durum})... Bekleniyor.")
 
 print("1. Aşama: Sinematik Anime Oda ve Yağmur Görseli Üretiliyor...")
 
-# Flux ile görsel üretimi (Sadece ihtiyacı olan parametreler)
 image_output = guvenli_dogrudan_baglanti(
     "black-forest-labs/flux-schnell",
     {
@@ -46,23 +58,22 @@ image_output = guvenli_dogrudan_baglanti(
     }
 )
 
-# Sadece temiz resmi linkini alıyoruz
 image_url = image_output[0] if isinstance(image_output, list) else image_output
 print(f"-> Görsel başarıyla çizildi. Link: {image_url}")
 
-print("2. Aşama: Görsel Canlandırılıyor (Hareketli Video Modeli Başlıyor)...")
+print("2. Aşama: Görsel Canlandırılıyor (Luma Ray Sinematik Motoru Başlatılıyor)...")
 
-# Base64 metinlerini veya 'mode' gibi fazla parametreleri kaldırdık. 
-# Sadece temiz linki ve hareket promptunu veriyoruz.
+# Kling yerine, erişimi tamamen açık ve mükemmel sonuç veren Luma Dream Machine (Ray) motoruna geçtik
 video_output = guvenli_dogrudan_baglanti(
-    "kwaivgi/kling-v1.6-standard",
+    "luma/ray",
     {
         "image": image_url,
         "prompt": "Raindrops falling down the window glass, gentle rain ripples, soft breathing of sleeping person, smooth looping motion, cozy ambiance"
     }
 )
 
-video_url = str(video_output)
+# Yapay zekanın çıktısını güvenli bir şekilde metin (link) haline getiriyoruz
+video_url = video_output[0] if isinstance(video_output, list) else str(video_output)
 print("-> Hareketli video hazırlandı, bilgisayara indiriliyor...")
 
 with open("raw_loop.mp4", "wb") as f:
