@@ -2,61 +2,75 @@ import os
 import time
 import requests
 import subprocess
-import replicate
+import base64
+
+TOKEN = os.environ.get("REPLICATE_API_TOKEN")
+HEADERS = {
+    "Authorization": f"Bearer {TOKEN}",
+    "Content-Type": "application/json"
+}
+
+def guvenli_dogrudan_baglanti(model_yolu, girdi):
+    """Zaman aşımı ve kütüphane çökmelerini engelleyen doğrudan API bağlantısı."""
+    print(f"-> {model_yolu} tetikleniyor...")
+    url = f"https://api.replicate.com/v1/models/{model_yolu}/predictions"
+    
+    # İşlem emrini gönderiyoruz
+    baslat = requests.post(url, headers=HEADERS, json={"input": girdi}, timeout=30)
+    baslat.raise_for_status()
+    kontrol_linki = baslat.json()["urls"]["get"]
+    
+    # İşlemin bitmesini çökmeden, sabırla bekliyoruz
+    while True:
+        time.sleep(10) # Sunucuyu yormamak için 10 saniyede bir soruyoruz
+        durum_cevap = requests.get(kontrol_linki, headers=HEADERS, timeout=30).json()
+        durum = durum_cevap["status"]
+        
+        if durum == "succeeded":
+            print("-> Yapay zeka işlemini başarıyla tamamladı!")
+            return durum_cevap["output"]
+        elif durum in ["failed", "canceled"]:
+            raise Exception(f"Model hata verdi: {durum_cevap.get('error')}")
+        else:
+            print(f"-> Model çalışıyor (Durum: {durum})... Bekleniyor.")
 
 print("1. Aşama: Sinematik Anime Oda ve Yağmur Görseli Üretiliyor...")
 
-# Flux modelini "Asenkron" (Beklemeli) modda başlatıyoruz
-gorsel_islem = replicate.predictions.create(
-    model="black-forest-labs/flux-schnell",
-    input={
+# Flux modeli ile görsel üretimi
+image_output = guvenli_dogrudan_baglanti(
+    "black-forest-labs/flux-schnell",
+    {
         "prompt": "Anime Studio Ghibli style, cozy warm bedroom interior, a person sleeping peacefully under a warm blanket in bed, massive window looking outside at heavy rain, street lights glowing in rain, cinematic lighting, masterpiece, 8k, vertical aspect ratio",
         "aspect_ratio": "9:16",
         "output_format": "jpg"
     }
 )
 
-# Zaman aşımını (Timeout) çöpe attık. İşlem bitene kadar bıkmadan durumunu soruyoruz.
-while gorsel_islem.status not in ["succeeded", "failed", "canceled"]:
-    print(f"-> Görsel Çiziliyor (Durum: {gorsel_islem.status})...")
-    time.sleep(3)
-    gorsel_islem.reload()
-
-if gorsel_islem.status != "succeeded":
-    raise Exception(f"Görsel üretilemedi: {gorsel_islem.error}")
-
-image_url = str(gorsel_islem.output[0])
-print("-> Görsel başarıyla üretildi, bilgisayara indiriliyor...")
-
-# Görseli mutlaka bilgisayara indiriyoruz (422 hatasını önlemek için)
+image_url = image_output[0] if isinstance(image_output, list) else image_output
+print("Görsel başarıyla çizildi, indiriliyor...")
 with open("source_image.jpg", "wb") as f:
     f.write(requests.get(image_url).content)
 
 print("2. Aşama: Görsel Canlandırılıyor (Hareketli Video Modeli Başlıyor)...")
 
-# Resmi Replicate'in anlayacağı şekilde (dosya olarak) yüklüyoruz
-with open("source_image.jpg", "rb") as image_file:
-    video_islem = replicate.predictions.create(
-        model="kwaivgi/kling-v1.6-standard",
-        input={
-            "image": image_file,
-            "prompt": "Raindrops falling down the window glass, gentle rain ripples, soft breathing of sleeping person, smooth looping motion, cozy ambiance",
-            "duration": 5
-        }
-    )
+# Resmi Kling'in hata vermeden okuyabilmesi için Base64 formatına (metne) çeviriyoruz
+with open("source_image.jpg", "rb") as img_file:
+    b64_string = base64.b64encode(img_file.read()).decode('utf-8')
+data_uri = f"data:image/jpeg;base64,{b64_string}"
 
-# Video üretimi ağır olduğu için 10 saniyede bir sorarak sunucunun çökmesini engelliyoruz
-while video_islem.status not in ["succeeded", "failed", "canceled"]:
-    print(f"-> Video İşleniyor (Durum: {video_islem.status})...")
-    time.sleep(10)
-    video_islem.reload()
+# Kling'e resmi metin dosyası olarak yolluyoruz, artık 422 hatası veremez
+video_output = guvenli_dogrudan_baglanti(
+    "kwaivgi/kling-v1.6-standard",
+    {
+        "image": data_uri,
+        "prompt": "Raindrops falling down the window glass, gentle rain ripples, soft breathing of sleeping person, smooth looping motion, cozy ambiance",
+        "duration": 5,
+        "mode": "standard"
+    }
+)
 
-if video_islem.status != "succeeded":
-    raise Exception(f"Video üretilemedi: {video_islem.error}")
-
-video_url = str(video_islem.output)
-print("-> Hareketli video hazırlandı, bilgisayara indiriliyor...")
-
+video_url = str(video_output)
+print("Hareketli video hazırlandı, bilgisayara indiriliyor...")
 with open("raw_loop.mp4", "wb") as f:
     f.write(requests.get(video_url).content)
 
