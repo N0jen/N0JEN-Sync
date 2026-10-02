@@ -1,12 +1,17 @@
 import os
 import requests
 import subprocess
+import httpx
 import replicate
 
-print("1. Aşama: Sinematik Anime Oda ve Yağmur Görseli Üretiliyor...")
+# Zaman aşımını (timeout) tamamen kaldırıyoruz. Yapay zeka uyanana kadar sabırla bekleyecek.
+sinirsiz_istemci = httpx.Client(timeout=None)
+api = replicate.Client(api_token=os.environ.get("REPLICATE_API_TOKEN"), client=sinirsiz_istemci)
 
-# Kaliteli Anime/Lofi görseli için Flux modeli çalıştırılıyor
-image_output = replicate.run(
+print("1. Aşama: Sinematik Anime Oda ve Yağmur Görseli Üretiliyor (Yapay zekanın uyanması 1-2 dakika sürebilir)...")
+
+# 'replicate.run' yerine oluşturduğumuz sabırlı 'api.run' kalkanını kullanıyoruz
+image_output = api.run(
     "black-forest-labs/flux-schnell",
     input={
         "prompt": "Anime Studio Ghibli style, cozy warm bedroom interior, a person sleeping peacefully under a warm blanket in bed, massive window looking outside at heavy rain, street lights glowing in rain, cinematic lighting, masterpiece, 8k, vertical aspect ratio",
@@ -16,13 +21,13 @@ image_output = replicate.run(
 )
 
 image_url = str(image_output[0])
+print(f"Görsel üretildi, indiriliyor...")
 with open("source_image.jpg", "wb") as f:
     f.write(requests.get(image_url).content)
 
-print("2. Aşama: Görsel Canlandırılıyor (Hareketli Video Modeli)...")
+print("2. Aşama: Görsel Canlandırılıyor (Hareketli Video Modeli Başlıyor)...")
 
-# Görseli videoya dönüştürme (Kling Image-to-Video)
-video_output = replicate.run(
+video_output = api.run(
     "kwaivgi/kling-v1.6-standard/image-to-video",
     input={
         "image": open("source_image.jpg", "rb"),
@@ -33,12 +38,12 @@ video_output = replicate.run(
 )
 
 video_url = str(video_output)
+print(f"Hareketli video hazırlandı, indiriliyor...")
 with open("raw_loop.mp4", "wb") as f:
     f.write(requests.get(video_url).content)
 
 print("3. Aşama: 60 Saniyeye Uzatma ve Tok Yağmur Sesi Ekleme...")
 
-# 5 saniyelik döngüyü 60 saniyeye tamamlar ve tok yağmur sesi üretir
 ffmpeg_cmd = [
     "ffmpeg", "-y",
     "-stream_loop", "-1", "-i", "raw_loop.mp4",
