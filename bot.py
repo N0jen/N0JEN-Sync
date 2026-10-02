@@ -2,21 +2,40 @@ import os
 import time
 import requests
 import subprocess
-import replicate
 
-def guvenli_yapay_zeka_calistir(model_adi, girdi_verisi, deneme_hakkasi=4):
-    """Yapay zeka uyuyorsa veya yoğunsa çökmeden tekrar tekrar dener."""
-    for deneme in range(deneme_hakkasi):
-        try:
-            return replicate.run(model_adi, input=girdi_verisi)
-        except Exception as e:
-            print(f"Yapay zeka uyanıyor/yoğun. Bekleniyor... (Deneme {deneme+1}/{deneme_hakkasi}) Hata: {e}")
-            time.sleep(10)  # Çökmeden önce 10 saniye soluklanıp tekrar dener
-    raise Exception("Yapay zeka sunucusu şu an çok yoğun, işlem tamamlanamadı.")
+TOKEN = os.environ.get("REPLICATE_API_TOKEN")
+HEADERS = {
+    "Authorization": f"Bearer {TOKEN}",
+    "Content-Type": "application/json"
+}
+
+def guvenli_yapay_zeka(model_yolu, girdi):
+    print(f"-> {model_yolu} başlatılıyor...")
+    url = f"https://api.replicate.com/v1/models/{model_yolu}/predictions"
+    
+    # İşlemi başlatıyoruz (Burada bekleme olmaz, sadece emri veririz)
+    baslat = requests.post(url, headers=HEADERS, json={"input": girdi}, timeout=30)
+    baslat.raise_for_status()
+    kontrol_linki = baslat.json()["urls"]["get"]
+    
+    # İşlemin bitmesini sabırla ve kopmadan bekleyen döngümüz
+    while True:
+        time.sleep(5)  # Sistemi boğmamak için 5 saniyede bir soruyoruz
+        durum_cevap = requests.get(kontrol_linki, headers=HEADERS, timeout=30).json()
+        durum = durum_cevap["status"]
+        
+        if durum == "succeeded":
+            print("-> Yapay zeka işlemini başarıyla bitirdi!")
+            return durum_cevap["output"]
+        elif durum in ["failed", "canceled"]:
+            raise Exception(f"Model hata verdi: {durum_cevap.get('error')}")
+        else:
+            print(f"-> Model çalışıyor (Durum: {durum})... Bekleniyor.")
 
 print("1. Aşama: Sinematik Anime Oda ve Yağmur Görseli Üretiliyor...")
 
-image_output = guvenli_yapay_zeka_calistir(
+# 1. Flux modeli ile görsel üretimi
+image_output = guvenli_yapay_zeka(
     "black-forest-labs/flux-schnell",
     {
         "prompt": "Anime Studio Ghibli style, cozy warm bedroom interior, a person sleeping peacefully under a warm blanket in bed, massive window looking outside at heavy rain, street lights glowing in rain, cinematic lighting, masterpiece, 8k, vertical aspect ratio",
@@ -25,27 +44,27 @@ image_output = guvenli_yapay_zeka_calistir(
     }
 )
 
-image_url = str(image_output[0])
-print("Görsel başarıyla üretildi, indiriliyor...")
-with open("source_image.jpg", "wb") as f:
-    f.write(requests.get(image_url).content)
+# Çıkan resmin sadece bulut linkini alıyoruz (indirmeden)
+image_url = image_output[0] if isinstance(image_output, list) else image_output
+print(f"Görsel Linki Alındı: {image_url}")
 
 print("2. Aşama: Görsel Canlandırılıyor (Hareketli Video Modeli Başlıyor)...")
 
-# 'with open' kullanarak dosya kilitleme hatalarının önüne geçiyoruz
-with open("source_image.jpg", "rb") as image_file:
-    video_output = guvenli_yapay_zeka_calistir(
-        "kwaivgi/kling-v1.6-standard/image-to-video",
-        {
-            "image": image_file,
-            "prompt": "Raindrops falling down the window glass, gentle rain ripples, soft breathing of sleeping person, smooth looping motion, cozy ambiance",
-            "duration": 5,
-            "mode": "standard"
-        }
-    )
+# 2. Resmi indirmeden doğrudan Kling modeline yolluyoruz (Çok daha hızlı ve güvenli)
+video_output = guvenli_yapay_zeka(
+    "kwaivgi/kling-v1.6-standard",
+    {
+        "image": image_url,
+        "prompt": "Raindrops falling down the window glass, gentle rain ripples, soft breathing of sleeping person, smooth looping motion, cozy ambiance",
+        "duration": 5,
+        "mode": "standard"
+    }
+)
 
 video_url = str(video_output)
-print("Hareketli video hazırlandı, indiriliyor...")
+print("Hareketli video bulutta hazırlandı, bilgisayara indiriliyor...")
+
+# Sadece nihai videoyu bilgisayara indiriyoruz
 with open("raw_loop.mp4", "wb") as f:
     f.write(requests.get(video_url).content)
 
