@@ -45,4 +45,20 @@ def fetch_and_convert():
             
             # JSON içindeki değişken etiketlerini eşleştirme
             name = item.get("name", item.get("title", item.get("kanal_adi", "İsimsiz Kanal")))
-            url = item.get("url", item.get("link
+            url = item.get("url", item.get("link", item.get("stream", "")))
+            logo = item.get("logo", item.get("tvg-logo", item.get("image", "")))
+            category = item.get("category", item.get("group", item.get("kategori", item.get("category_from_dict", "Diğer"))))
+            
+            if not url:
+                continue
+                
+            # M3U Formatında Yazdırma
+            extinf_line = f'#EXTINF:-1 tvg-logo="{logo}" group-title="{category}",{name}\n'
+            f.write(extinf_line)
+            f.write(f"{url}\n")
+            count += 1
+            
+    print(f"Başarılı! Toplam {count} kanal {OUTPUT_M3U} dosyasına yazıldı.")
+
+if __name__ == "__main__":
+    fetch_and_convert()
