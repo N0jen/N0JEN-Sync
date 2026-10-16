@@ -2,8 +2,9 @@ import requests
 import re
 import urllib3
 import time
-from bs4 import BeautifulSoup
 import os
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -49,8 +50,11 @@ def process_page_links(base_url, page_num):
     page_url = f"{base_url}/page/{page_num}/" if page_num > 1 else base_url
     
     try:
-        res = requests.get(page_url, headers=HEADERS, verify=False, timeout=10)
+        res = requests.get(page_url, headers=HEADERS, verify=False, timeout=15)
+        
+        # Eğer site GitHub IP'sini engelliyorsa loglarda göreceğiz:
         if res.status_code != 200:
+            print(f"[-] HATA: Sayfa erişimi reddedildi. Status Kodu: {res.status_code}")
             return []
             
         soup = BeautifulSoup(res.text, "html.parser")
@@ -58,10 +62,14 @@ def process_page_links(base_url, page_num):
         
         content_links = set()
         for a in all_links:
-            href = a['href']
-            if base_url in href and not any(x in href for x in ['/kategori/', '/tag/', '/author/', '/page/', 'wp-admin']):
-                if href.count('/') > 3 and href != base_url + "/":
-                    content_links.add(href)
+            href = a.get('href', '')
+            
+            # Göreceli linkleri tam linke çevir (örnek: /film-adi -> https://site.com/film-adi)
+            full_url = urljoin(base_url, href)
+            
+            if base_url in full_url and not any(x in full_url for x in ['/kategori/', '/tag/', '/author/', '/page/', 'wp-admin']):
+                if full_url.count('/') > 3 and full_url != base_url + "/":
+                    content_links.add(full_url)
                     
         return list(content_links)
     except Exception as e:
@@ -120,8 +128,9 @@ def main():
     
     base_url = get_base_url()
     
-    # Otomasyon için sayfa sayısı sabitlendi. İstediğin kadar artırabilirsin.
-    max_pages = 1000
+    # DİKKAT: GitHub'da 1000 sayfa taramak saatler sürer ve ban yemene sebep olur.
+    # Şimdilik 5 sayfa ile test edelim.
+    max_pages = 5
     
     m3u_content = ["#EXTM3U\n"]
     basarili_sayisi = 0
@@ -131,7 +140,7 @@ def main():
         print(f"[*] Sayfa {page}'de {len(links)} içerik bulundu.")
         
         for link in links:
-            time.sleep(0.5) # Ban yememek için bekleme süresi
+            time.sleep(0.5) 
             
             sources = extract_video_sources(link, base_url)
             if sources:
