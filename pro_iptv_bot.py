@@ -1,4 +1,4 @@
-import requests
+import cloudscraper
 import re
 import urllib3
 import time
@@ -14,9 +14,12 @@ HEADERS = {
     "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.8"
 }
 
+# Normal requests yerine Cloudflare atlatıcı scraper kullanıyoruz
+scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False})
+
 def get_base_url():
     try:
-        res = requests.get("https://raw.githubusercontent.com/patr0nq/veriler/refs/heads/main/siteurl.txt", timeout=5, verify=False)
+        res = scraper.get("https://raw.githubusercontent.com/patr0nq/veriler/refs/heads/main/siteurl.txt", timeout=5, verify=False)
         for line in res.text.split('\n'):
             line = line.strip()
             if line.startswith("diziyou:"):
@@ -50,9 +53,8 @@ def process_page_links(base_url, page_num):
     page_url = f"{base_url}/page/{page_num}/" if page_num > 1 else base_url
     
     try:
-        res = requests.get(page_url, headers=HEADERS, verify=False, timeout=15)
+        res = scraper.get(page_url, headers=HEADERS, verify=False, timeout=15)
         
-        # Eğer site GitHub IP'sini engelliyorsa loglarda göreceğiz:
         if res.status_code != 200:
             print(f"[-] HATA: Sayfa erişimi reddedildi. Status Kodu: {res.status_code}")
             return []
@@ -63,8 +65,6 @@ def process_page_links(base_url, page_num):
         content_links = set()
         for a in all_links:
             href = a.get('href', '')
-            
-            # Göreceli linkleri tam linke çevir (örnek: /film-adi -> https://site.com/film-adi)
             full_url = urljoin(base_url, href)
             
             if base_url in full_url and not any(x in full_url for x in ['/kategori/', '/tag/', '/author/', '/page/', 'wp-admin']):
@@ -78,7 +78,7 @@ def process_page_links(base_url, page_num):
 
 def extract_video_sources(url, base_url):
     try:
-        res = requests.get(url, headers=HEADERS, verify=False, timeout=10)
+        res = scraper.get(url, headers=HEADERS, verify=False, timeout=10)
         html = res.text
         soup = BeautifulSoup(html, "html.parser")
         
@@ -123,15 +123,12 @@ def extract_video_sources(url, base_url):
 
 def main():
     print("==================================================")
-    print("   OTOMATİK GITHUB IPTV M3U OLUŞTURUCU (DIZIYOU)  ")
+    print("   OTOMATİK GITHUB IPTV M3U OLUŞTURUCU (CLOUDSCRAPER)  ")
     print("==================================================")
     
     base_url = get_base_url()
     
-    # DİKKAT: GitHub'da 1000 sayfa taramak saatler sürer ve ban yemene sebep olur.
-    # Şimdilik 5 sayfa ile test edelim.
     max_pages = 5
-    
     m3u_content = ["#EXTM3U\n"]
     basarili_sayisi = 0
     
