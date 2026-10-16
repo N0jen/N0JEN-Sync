@@ -1,29 +1,28 @@
+import requests
 import json
 import os
 
-INPUT_JSON = "liste.json"
+# Veriyi çekeceğimiz kaynak URL
+JSON_URL = "https://raw.githubusercontent.com/dominoiptv/dominotv/main/liste.json"
 OUTPUT_M3U = "liste.m3u"
 
-def convert_json_to_m3u():
-    # 1. Dosya kontrolü
-    if not os.path.exists(INPUT_JSON):
-        print(f"Hata: '{INPUT_JSON}' dosyası aynı dizinde bulunamadı!")
-        print("Lütfen deponuzdaki json dosyasının adının tam olarak 'liste.json' olduğundan emin olun.")
-        return
-
-    # 2. JSON dosyasını okuma (İnternetsiz, doğrudan diskten)
-    print("liste.json dosyası okunuyor...")
+def fetch_and_convert():
+    print(f"{JSON_URL} adresinden veriler çekiliyor...")
+    
     try:
-        with open(INPUT_JSON, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except json.JSONDecodeError as e:
-        print(f"Hata: JSON dosyasının formatı bozuk! Lütfen JSON yapınızı kontrol edin. Detay: {e}")
+        # İnternetten JSON dosyasını indir
+        response = requests.get(JSON_URL, timeout=15)
+        response.raise_for_status() # Eğer 404 veya 403 hatası varsa burada durdurur
+        data = response.json()
+        print("JSON verisi başarıyla indirildi!")
+    except requests.exceptions.RequestException as e:
+        print(f"Hata: URL'den veri çekilemedi! Linki veya deponun gizlilik (private) ayarlarını kontrol edin. Detay: {e}")
         return
-    except Exception as e:
-        print(f"Hata: Dosya okunurken beklenmedik bir sorun oluştu! {e}")
+    except json.JSONDecodeError as e:
+        print(f"Hata: Çekilen veri geçerli bir JSON formatında değil! Detay: {e}")
         return
 
-    # 3. Veriyi M3U formatına uygun ayıklama
+    # Veriyi listeye çevirme ve düzleştirme
     items = []
     if isinstance(data, list):
         items = data
@@ -37,7 +36,7 @@ def convert_json_to_m3u():
             else:
                 items.append(val)
 
-    # 4. M3U dosyasını oluşturma
+    # M3U Dosyasını oluşturma
     count = 0
     with open(OUTPUT_M3U, "w", encoding="utf-8") as f:
         f.write("#EXTM3U\n")
@@ -63,4 +62,4 @@ def convert_json_to_m3u():
     print(f"Başarılı! Toplam {count} kanal {OUTPUT_M3U} dosyasına yazıldı.")
 
 if __name__ == "__main__":
-    convert_json_to_m3u()
+    fetch_and_convert()
