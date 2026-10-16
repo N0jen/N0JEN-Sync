@@ -2,14 +2,14 @@ name: Generate M3U Playlists
 
 on:
   schedule:
-    - cron: '0 */12 * * *' # Her 12 saatte bir günceller
-  workflow_dispatch: # Manuel olarak tetikleme butonu ekler
+    - cron: '0 */12 * * *'
+  workflow_dispatch: 
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Dosyaları depoya yazıp pushlamak için gerekli izin
+      contents: write 
 
     steps:
       - name: Checkout Repository
@@ -22,9 +22,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Kütüphaneleri doğrudan burada yüklüyoruz (requirements.txt'ye gerek kalmıyor)
           python -m pip install --upgrade pip
-          pip install requests beautifulsoup4
+          pip install cloudscraper beautifulsoup4
 
       - name: Run Scraper and Generate M3U
         run: |
