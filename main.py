@@ -1,4 +1,4 @@
-import requests
+import cloudscraper
 import json
 import re
 import os
@@ -13,9 +13,16 @@ HEADERS = {
     "Accept": "application/json"
 }
 
+# Cloudscraper tanımlaması (Bot kontrollerini aşar)
+scraper = cloudscraper.create_scraper(browser={
+    'browser': 'chrome',
+    'platform': 'android',
+    'desktop': False
+})
+
 def extract_mediafire(url):
     try:
-        res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        res = scraper.get(url)
         match = re.search(r'id="downloadButton"\s+href="([^"]+)"', res.text, re.IGNORECASE) or \
                 re.search(r'href="([^"]+)"\s+id="downloadButton"', res.text, re.IGNORECASE)
         if match:
@@ -34,10 +41,15 @@ def get_main_page_items():
     items = []
     for ep in endpoints:
         try:
-            data = requests.get(ep["url"], headers=HEADERS).json()
+            res = scraper.get(ep["url"], headers=HEADERS)
+            
+            if res.status_code != 200:
+                print(f"[{res.status_code}] Bağlantı reddedildi: {ep['url']}")
+                continue
+                
+            data = res.json()
             results = data.get("movies", []) or data.get("series", [])
             for r in results:
-                # Anime kontrolü (başlık veya animasyon türü)
                 is_anime = "anime" in str(r.get("genres", "")).lower() or "anime" in str(r.get("name", "")).lower()
                 cat = "anime" if is_anime else ep["cat"]
                 
@@ -48,15 +60,22 @@ def get_main_page_items():
                     "poster": r.get("poster_path", ""),
                     "category": cat
                 })
+        except json.JSONDecodeError:
+            print(f"Sunucu JSON döndürmedi! API URL: {ep['url']}")
         except Exception as e:
-            print(f"Hata: {ep['url']} - {e}")
+            print(f"Bilinmeyen Hata: {ep['url']} - {e}")
+            
     return items
 
 def get_streams(item_id, item_type):
     url = f"{BASE_URL}/public/api/{'media' if item_type == 'movie' else 'series'}/{'detail' if item_type == 'movie' else 'show'}/{item_id}/{API_TOKEN}"
     streams = []
     try:
-        data = requests.get(url, headers=HEADERS).json()
+        res = scraper.get(url, headers=HEADERS)
+        if res.status_code != 200:
+            return streams
+            
+        data = res.json()
         if item_type == "movie":
             videos = data.get("videos", [])
             for v in videos:
@@ -66,7 +85,6 @@ def get_streams(item_id, item_type):
                         link = extract_mediafire(link)
                     streams.append(link)
         else:
-            # Diziler için ilk bölümü örnek olarak çekiyoruz (M3U kalabalık olmasın diye genişletilebilir)
             seasons = data.get("seasons", [])
             for s in seasons:
                 episodes = s.get("episodes", [])
@@ -78,14 +96,19 @@ def get_streams(item_id, item_type):
                             if "mediafire.com" in link:
                                 link = extract_mediafire(link)
                             streams.append(link)
-    except:
+    except Exception as e:
         pass
+        
     return list(set(streams))
 
 def main():
     print("İçerikler Çekiliyor...")
     items = get_main_page_items()
     
+    if not items:
+        print("Uyarı: Hiç içerik bulunamadı. API engellemesi olabilir.")
+        return
+
     m3u_files = {
         "movies": "#EXTM3U\n",
         "series": "#EXTM3U\n",
@@ -93,7 +116,6 @@ def main():
         "all": "#EXTM3U\n"
     }
 
-    # Tekrarlananları önlemek için ID kontrolü
     processed = set()
     
     for item in items:
@@ -101,13 +123,12 @@ def main():
             continue
         processed.add(item["id"])
         
-        print(f"İşleniyor: {item['title']}")
+        print(f"İşleniyor: {item['title']} ({item['category']})")
         streams = get_streams(item["id"], item["type"])
         
         for stream in streams:
             if not stream: continue
             
-            # Sona uzantı ekleme (player uyumluluğu için)
             if not re.search(r'\.(m3u8|mp4|mkv)', stream, re.I):
                 stream += "#.mkv"
                 
@@ -116,11 +137,11 @@ def main():
             m3u_files[item["category"]] += entry
             m3u_files["all"] += entry
 
-    # Dosyaları kaydet
     for name, content in m3u_files.items():
         with open(f"{name}.m3u", "w", encoding="utf-8") as f:
             f.write(content)
-    print("Tüm M3U dosyaları oluşturuldu.")
+            
+    print(f"Tüm dosyalar oluşturuldu. Toplam İşlenen: {len(processed)} içerik.")
 
 if __name__ == "__main__":
     main()
