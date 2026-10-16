@@ -1,0 +1,37 @@
+name: Otomatik IPTV Güncelleyici
+
+on:
+  schedule:
+    # Her gün saat 06:00 ve 18:00'da (UTC) otomatik çalışır
+    - cron: '0 6,18 * * *'
+  workflow_dispatch: # Actions sekmesinden manuel tetikleme butonu ekler
+
+permissions:
+  contents: write # Depoya dosyayı geri yazabilmesi için GEREKLİ İZİN
+
+jobs:
+  update-m3u:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Depoyu Çek
+        uses: actions/checkout@v4
+
+      - name: Python Ortamını Kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Kütüphaneleri Yükle
+        run: pip install -r requirements.txt
+
+      - name: Botu Çalıştır ve Verileri Çek
+        run: python pro_iptv_bot.py
+
+      - name: Yeni Dosyayı Depoya Kaydet (Commit & Push)
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Bot"
+          git add vip_iptv.m3u
+          # Eğer dosyada değişiklik yoksa hata vermemesi için || echo kullanıyoruz
+          git commit -m "🚀 IPTV Listesi Otomatik Güncellendi" || echo "Değişiklik yok, işlem atlandı."
+          git push
