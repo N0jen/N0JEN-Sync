@@ -34,6 +34,13 @@ jobs:
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add liste.m3u
-          # Eğer dosyada değişiklik varsa commit yap ve pushla, yoksa hata verme
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Otomatik güncellendi: liste.m3u" && git push)
+          
+          # liste.m3u dosyası başarıyla oluşturulmuş mu diye kontrol et
+          if [ -f liste.m3u ]; then
+            git add liste.m3u
+            # Değişiklik varsa commit yap ve pushla
+            git diff --quiet && git diff --staged --quiet || (git commit -m "Otomatik güncellendi: liste.m3u" && git push)
+            echo "İşlem başarılı, dosya güncellendi."
+          else
+            echo "UYARI: liste.m3u dosyası bulunamadı! Python betiği JSON dosyasını çekememiş olabilir."
+          fi
